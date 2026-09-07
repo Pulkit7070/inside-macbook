@@ -58,6 +58,11 @@ test('camera controls, dragging, and demo return to an interactive view', async 
   await page.waitForTimeout(500);
   expect(await page.evaluate(() => (window as unknown as { atlasDrawCalls: number }).atlasDrawCalls)).toBe(callsAtRest);
   await page.getByRole('button', { name: 'Zoom in', exact: true }).click();
+  // Freeze demo time so a slow renderer cannot finish the 24-second tour
+  // between the start and exit interactions; this scenario tests early exit.
+  const demoClockStart = new Date('2026-01-01T00:00:00Z');
+  await page.clock.install({ time: demoClockStart });
+  await page.clock.pauseAt(new Date(demoClockStart.getTime() + 60_000));
   await page.getByRole('button', { name: /Watch the teardown/ }).click();
   await expect(page.locator('.demo-caption')).toBeVisible();
   await page.getByRole('button', { name: /Exit demo/ }).click();
@@ -77,6 +82,11 @@ test('phone parts panel, inspection, about dialog, and layout', async ({ page })
   await page.getByRole('button', { name: 'Isolate component' }).click();
   await expect(page.getByRole('button', { name: 'Show full assembly' })).toBeVisible();
   await page.getByRole('button', { name: 'Show full assembly' }).click();
+  // Freeze demo time so a slow renderer cannot finish the 24-second tour
+  // between the start and exit interactions; this scenario tests early exit.
+  const demoClockStart = new Date('2026-01-01T00:00:00Z');
+  await page.clock.install({ time: demoClockStart });
+  await page.clock.pauseAt(new Date(demoClockStart.getTime() + 60_000));
   await page.getByRole('button', { name: /Watch the teardown/ }).click();
   await expect(page.locator('.inspector')).not.toBeVisible();
   await page.getByRole('button', { name: /Exit demo/ }).click();
@@ -110,6 +120,12 @@ for (const viewport of [{ width: 1440, height: 960 }, { width: 390, height: 844 
         await expect(item).toBeVisible();
         await expect(item).toBeInViewport({ ratio: 1 });
       }
+      // A panel can cover a control while its bounding box remains in the viewport.
+      await expect.poll(async () => inventory.evaluateAll(items => items.filter(item => {
+        const bounds = item.getBoundingClientRect();
+        const target = document.elementFromPoint(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+        return !target || !item.contains(target);
+      }).map(item => item.getAttribute('aria-label')))).toEqual([]);
       await expect(page.getByRole('slider', { name: 'Explode assembly' })).toHaveValue('100');
     };
     await assertInventoryVisible();
@@ -121,3 +137,29 @@ for (const viewport of [{ width: 1440, height: 960 }, { width: 390, height: 844 
     }
   });
 }
+
+test('logic board navigation exposes eight functional groups and independent progress', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'All parts', exact: true }).click();
+  await page.getByRole('button', { name: 'Explore logic board', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Inside the logic board', exact: true })).toBeVisible();
+  await expect(page.locator('.part-row')).toHaveCount(8);
+  await expect(page.locator('.assembly-canvas')).toHaveCount(0);
+  await expect(page.locator('.scene-wrap canvas')).toBeVisible();
+  await page.getByRole('button', { name: 'NAND flash storage', exact: true }).click();
+  const details = page.getByRole('complementary', { name: 'Circuit details' });
+  await expect(details.getByRole('heading')).toHaveText('NAND flash storage');
+  await expect(details).toContainText('Nonvolatile flash');
+  const progress = page.getByRole('slider', { name: 'Explode assembly' });
+  await expect(progress).toHaveValue('0');
+  await progress.fill('50');
+  await expect(progress).toHaveValue('50');
+  await expect(details.getByRole('heading')).toHaveText('NAND flash storage');
+  await page.getByRole('button', { name: 'All parts', exact: true }).click();
+  await expect(progress).toHaveValue('100');
+  await page.getByRole('button', { name: 'Back to MacBook', exact: true }).click();
+  await expect(page.locator('.part-row')).toHaveCount(20);
+  await expect(page.locator('.inventory-item')).toHaveCount(20);
+  await expect(details).toHaveCount(0);
+  await expect(progress).toHaveValue('100');
+});

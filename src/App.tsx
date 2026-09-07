@@ -1,6 +1,7 @@
 import { flushSync } from 'react-dom';
 import { Component, lazy, Suspense, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react';
 import { ArrowDownLeft, ArrowRight, ArrowUpRight, Box, Check, ChevronDown, ChevronLeft, CircleHelp, Cpu, Eye, Focus, Layers3, Maximize2, Minus, MousePointer2, MoveUpRight, Pause, Play, Plus, RotateCcw, Search, SlidersHorizontal, X } from 'lucide-react';
+import { boardParts, BOARD_DISCLAIMER } from './data/board';
 import { getPart, parts, systems } from './data/parts';
 import { initialState, reducer, visibleParts } from './state/explorer';
 import { DEMO_DURATION, sampleTimeline } from './scene/timeline';
@@ -8,6 +9,7 @@ import type { View } from './scene/Scene';
 
 declare global { interface Window { __atlasRenderFrame?: (seconds: number) => Promise<void> } }
 const renderMode = new URLSearchParams(window.location.search).has('render');
+const BoardDetail = lazy(() => import('./scene/BoardDetail'));
 const Scene = lazy(() => import('./scene/Scene'));
 
 class SceneBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
@@ -20,6 +22,9 @@ class SceneBoundary extends Component<{ children: ReactNode }, { failed: boolean
 
 export default function App() {
   const [state, dispatch] = useReducer(reducer, initialState);
+  const [boardOpen, setBoardOpen] = useState(false);
+  const [boardProgress, setBoardProgress] = useState(0);
+  const [boardSelectedId, setBoardSelectedId] = useState('board-soc');
   const [query, setQuery] = useState('');
   const [view, setView] = useState<View>('perspective');
   const [resetKey, setResetKey] = useState(0);
@@ -43,7 +48,7 @@ export default function App() {
     let frame = 0; const start = performance.now();
     const tick = (now: number) => {
       const t = (now - start) / 1000;
-      if (t >= DEMO_DURATION) { setDemo(false); setDemoTime(24); dispatch({type:'explosion', value:1}); return; }
+      if (t >= DEMO_DURATION) { setDemo(false); setDemoTime(24); setBoardOpen(true); setBoardProgress(1); dispatch({type:'explosion', value:1}); return; }
       setDemoTime(t); frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick); return () => cancelAnimationFrame(frame);
@@ -61,21 +66,28 @@ export default function App() {
 
   useEffect(() => {
     window.__atlasRenderFrame = async seconds => {
+      await Promise.all([import('./scene/Scene'), import('./scene/BoardDetail')]);
       flushSync(() => { setDemo(true); setDemoTime(seconds); });
+      await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+      const deadline = performance.now()+15000;
+      while(document.querySelector('.loading-view')) { if(performance.now()>deadline) throw new Error('Scene loading timed out'); await new Promise<void>(resolve => requestAnimationFrame(() => resolve())); }
       await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
     };
     return () => { delete window.__atlasRenderFrame; };
   }, []);
   const timeline = useMemo(() => sampleTimeline(demoTime), [demoTime]);
+  const boardMode = demo ? timeline.board : boardOpen;
+  const boardAmount = demo ? timeline.boardProgress : boardProgress;
+  const boardSelected = boardParts.find(p => p.id === (demo ? timeline.boardSelectedId : boardSelectedId)) ?? boardParts[0];
   const renderedState = demo ? { ...initialState, enabledSystems: [...initialState.enabledSystems], explosion: timeline.explosion, selectedId: timeline.selectedId } : state;
   const visible = visibleParts(state);
   const results = visible.filter(part => `${part.name} ${part.system} ${part.id}`.toLowerCase().includes(query.trim().toLowerCase()));
   const selected = renderedState.selectedId ? getPart(renderedState.selectedId) : undefined;
   const selectedSystem = systems.find(system => system.id === selected?.system);
-  const percent = Math.round(renderedState.explosion * 100);
+  const percent = Math.round((boardMode ? boardAmount : renderedState.explosion) * 100);
 
   const reset = () => {
-    dispatch({ type: 'reset' }); setQuery(''); setView('perspective'); setZoom(1); setResetKey(n => n + 1); setDemo(false); setMobileParts(false);
+    setBoardOpen(false); setBoardProgress(0); dispatch({ type: 'reset' }); setQuery(''); setView('perspective'); setZoom(1); setResetKey(n => n + 1); setDemo(false); setMobileParts(false);
   };
   const select = (id: string, fromList = false) => {
     dispatch({ type: 'select', id }); setMobileParts(false);
@@ -83,12 +95,12 @@ export default function App() {
   };
   const startDemo = () => { setDemoTime(0); setMobileParts(false); setDemo(true); };
 
-  return <div className={`app ${focusMode ? 'focus-mode' : ''} ${demo ? 'demo-mode' : ''} ${renderMode ? 'render-mode' : ''} ${renderedState.explosion >= .98 && !renderedState.isolatedId ? 'inventory-mode' : ''}`}>
+  return <div className={`app ${boardMode ? 'board-mode' : ''} ${focusMode ? 'focus-mode' : ''} ${demo ? 'demo-mode' : ''} ${renderMode ? 'render-mode' : ''} ${!boardMode && renderedState.explosion >= .98 && !renderedState.isolatedId ? 'inventory-mode' : ''}`}>
     <header className="header">
       <a className="brand" href="/" aria-label="Inside a MacBook home"><span className="brand-icon"><Layers3 size={21} strokeWidth={1.65} /></span><span>inside<span className="brand-period">.</span></span></a>
       <div className="breadcrumb"><span>AN OBJECT EXPLORER</span><i /><span>MACBOOK PRO</span></div>
       <div className="header-actions"><button className="about-button" aria-label="About this project" onClick={() => about.current?.showModal()}><CircleHelp size={16} /><span>About this project</span></button>
-        <button className={`demo-button ${demo ? 'playing' : ''}`} onClick={demo ? () => setDemo(false) : startDemo}>{demo ? <Pause size={13} fill="currentColor" /> : <Play size={13} fill="currentColor" />}{demo ? 'Exit demo' : 'Watch the teardown'}<span className="demo-duration">24s</span></button>
+        <button key={demo ? "exit-demo" : "start-demo"} className={`demo-button ${demo ? 'playing' : ''}`} onClick={demo ? () => setDemo(false) : startDemo}>{demo ? <Pause size={13} fill="currentColor" /> : <Play size={13} fill="currentColor" />}{demo ? 'Exit demo' : 'Watch the teardown'}<span className="demo-duration">24s</span></button>
       </div>
     </header>
 
@@ -96,7 +108,7 @@ export default function App() {
       <button className="mobile-parts-button" onClick={() => setMobileParts(v => !v)} aria-expanded={mobileParts} aria-controls="assembly-sidebar"><SlidersHorizontal size={15} />Parts & systems<ChevronDown size={14} /></button>
       {mobileParts && <button className="mobile-backdrop" aria-label="Close parts panel" onClick={() => setMobileParts(false)} />}
       <aside id="assembly-sidebar" className={`sidebar ${mobileParts ? 'mobile-open' : ''}`} aria-label="Parts and systems">
-        <div className="sidebar-heading"><div className="eyebrow">LOOK A LITTLE CLOSER</div><h2>The assembly<span>.</span></h2><p><b>20</b> components <span>·</span> <b>5</b> systems</p></div>
+        <div className="sidebar-heading"><div className="eyebrow">LOOK A LITTLE CLOSER</div><h2>{boardMode ? "Inside the board" : "The assembly"}<span>.</span></h2><p>{boardMode ? "8 functional groups · circuit study" : "20 assemblies · 8 board groups"}</p></div>
         <fieldset className="systems" disabled={demo}><legend className="section-label">SYSTEMS <span>VISIBILITY</span></legend>
           {systems.map(system => {
             const enabled = state.enabledSystems.includes(system.id);
@@ -105,28 +117,31 @@ export default function App() {
             </button>;
           })}
         </fieldset>
-        <div className="parts-heading"><span className="section-label">COMPONENTS</span><span className="count-pill">{results.length}</span></div>
+        <div className="parts-heading"><span className="section-label">COMPONENTS</span><span className="count-pill">{boardMode ? boardParts.length : results.length}</span></div>
         <label className="search-field"><Search size={14} /><input ref={search} value={query} onChange={e => setQuery(e.target.value)} placeholder="Find a component" aria-label="Find a component" disabled={demo} />{query ? <button onClick={() => setQuery('')} aria-label="Clear search"><X size={13} /></button> : <kbd>/</kbd>}</label>
         <div className="parts-list" aria-label="Component list">
-          {results.map(part => <button key={part.id} disabled={demo} className={`part-row ${selected?.id === part.id ? 'selected' : ''}`} aria-pressed={selected?.id === part.id} onClick={() => select(part.id, true)}><span className="part-indicator" /><span>{part.name}</span><ArrowUpRight size={13} /></button>)}
+          {boardMode ? boardParts.map(part => <button key={part.id} className={`part-row ${boardSelected.id === part.id ? "selected" : ""}`} onClick={() => setBoardSelectedId(part.id)}><span className="part-indicator" /><span>{part.name}</span><ArrowUpRight size={13} /></button>) : results.map(part => <button key={part.id} disabled={demo} className={`part-row ${selected?.id === part.id ? 'selected' : ''}`} aria-pressed={selected?.id === part.id} onClick={() => select(part.id, true)}><span className="part-indicator" /><span>{part.name}</span><ArrowUpRight size={13} /></button>)}
           {results.length === 0 && <div className="empty-list"><Search size={21} /><p>{query ? 'No matching components.' : 'All systems are hidden.'}</p><button onClick={query ? () => setQuery('') : reset}>{query ? 'Clear search' : 'Show all components'}</button></div>}
         </div>
         <div className="sidebar-foot"><span className="live-dot" />Original 3D illustration<CircleHelp size={13} /></div>
       </aside>
 
       <section className="viewer" aria-label="MacBook explorer">
-        <div className="viewer-heading"><div><div className="eyebrow">ENGINEERED, LAYER BY LAYER</div><h1>MacBook Pro</h1><p>14-inch <span>/</span> 2026 <span>/</span> M5 Pro</p></div><div className="live-label"><span />INTERACTIVE 3D</div></div>
+        <div className="viewer-heading"><div><div className="eyebrow">ENGINEERED, LAYER BY LAYER</div><h1>{boardMode ? "Inside the logic board" : "MacBook Pro"}</h1><p>14-inch <span>/</span> 2026 <span>/</span> M5 Pro</p></div><div className="live-label"><span />INTERACTIVE 3D</div></div>
         <div className="scene-wrap">
           <div className="datum datum-left"><span>+</span></div><div className="datum datum-right"><span>+</span></div>
           <SceneBoundary><Suspense fallback={<div className="loading-view"><Layers3 size={28} /><span>Preparing the assembly</span><i /></div>}>
-            <Scene state={renderedState} view={view} resetKey={resetKey} onSelect={id => { if (!demo) select(id); }} reducedMotion={reducedMotion || renderMode}
-              lid={demo ? timeline.lid : undefined} demoAngle={demo ? timeline.angle : undefined} zoom={zoom} />
+            {!boardMode && <div className="assembly-canvas"><Scene state={renderedState} view={view} resetKey={resetKey} onSelect={id => { if (!demo) select(id); }} reducedMotion={reducedMotion || renderMode}
+              lid={demo ? timeline.lid : undefined} demoAngle={demo ? timeline.angle : undefined} zoom={zoom} /></div>}
+            {boardMode && <BoardDetail progress={boardAmount} selectedId={boardSelected.id} onSelect={id => { if(!demo) setBoardSelectedId(id); }} />}
           </Suspense></SceneBoundary>
-          {renderedState.explosion >= .98 && !renderedState.isolatedId && <div className="inventory-labels" aria-label="Component tray">{parts.map(part => <button disabled={!renderedState.enabledSystems.includes(part.system)} key={part.id} className={`inventory-item ${selected?.id === part.id ? 'active' : ''}`} onClick={() => { if (!demo) select(part.id); }} aria-label={`Inspect ${part.name}`}><span>{part.name}</span></button>)}</div>}
+          {!boardMode && renderedState.explosion >= .98 && !renderedState.isolatedId && <div className="inventory-labels" aria-label="Component tray">{parts.map(part => <button disabled={!renderedState.enabledSystems.includes(part.system)} key={part.id} className={`inventory-item ${selected?.id === part.id ? 'active' : ''}`} onClick={() => { if (!demo) select(part.id); }} aria-label={`Inspect ${part.name}`}><span>{part.name}</span></button>)}</div>}
           {!visible.length && !demo && <div className="scene-empty"><Eye size={24} /><p>Nothing in view</p><button onClick={reset}>Show all components <ArrowRight size={14} /></button></div>}
         </div>
+        {!demo && <button className="board-entry" onClick={() => {setBoardOpen(!boardOpen);setMobileParts(false);}}><Cpu size={14}/>{boardOpen ? 'Back to MacBook' : 'Explore logic board'}<ArrowUpRight size={12}/></button>}
+        {boardMode && <aside className="board-details" aria-label="Circuit details"><div className="eyebrow">CIRCUIT STUDY / {boardParts.indexOf(boardSelected)+1} OF 8</div><h2>{boardSelected.name}</h2><p>{boardSelected.description}</p><p>{boardSelected.detail}</p><a href={boardSelected.source} target="_blank" rel="noreferrer">Reference <ArrowUpRight size={12}/></a><small>{BOARD_DISCLAIMER}</small></aside>}
         {!demo && <>
-          <div className="scene-top-controls"><div className="view-switch" aria-label="Camera view">{(['perspective', 'top', 'front'] as const).map(v => <button key={v} className={view === v ? 'active' : ''} aria-pressed={view === v} onClick={() => setView(v)}>{v === 'perspective' ? 'Perspective' : v === 'top' ? 'Top' : 'Front'}</button>)}</div>
+          <div className="scene-top-controls"><div className="view-switch" aria-label="Camera view">{(['perspective', 'top', 'front', 'bottom', 'left', 'right'] as const).map(v => <button key={v} className={view === v ? 'active' : ''} aria-pressed={view === v} onClick={() => setView(v)}>{v.charAt(0).toUpperCase() + v.slice(1)}</button>)}</div>
             {state.isolatedId && <button className="return-button" onClick={() => dispatch({ type: 'clear-isolation' })}><ChevronLeft size={14} />Show assembly</button>}
           </div>
           <div className="viewport-actions"><button aria-label="Zoom in" title="Zoom in" disabled={zoom >= 1.6} onClick={() => setZoom(v => Math.min(1.6, v + 0.15))}><Plus size={17} /></button><button aria-label="Zoom out" title="Zoom out" disabled={zoom <= 0.7} onClick={() => setZoom(v => Math.max(0.7, v - 0.15))}><Minus size={17} /></button><span /><button aria-label={focusMode ? 'Exit expanded view' : 'Expand view'} title="Expand view" onClick={() => setFocusMode(v => !v)}><Maximize2 size={15} /></button></div>
@@ -157,9 +172,9 @@ export default function App() {
       </aside>
 
       <section className="teardown-controls" aria-label="Teardown controls">
-        <div className="teardown-label"><span className="slider-icon"><Layers3 size={19} strokeWidth={1.5} /></span><div><h2>Take it apart</h2><p>One layer at a time.</p></div></div>
-        <div className="slider-control"><div className="slider-endpoints"><button disabled={demo || !!state.isolatedId} onClick={() => dispatch({ type: 'explosion', value: 0 })}>Assembled</button><span className="explosion-value">{percent}<span>%</span></span><button disabled={demo || !!state.isolatedId} onClick={() => dispatch({ type: 'explosion', value: 1 })}>All parts <MoveUpRight size={11} /></button></div>
-          <input type="range" min="0" max="100" step="1" value={percent} disabled={demo || !!state.isolatedId} onChange={e => dispatch({ type: 'explosion', value: Number(e.target.value) / 100 })} aria-label="Explode assembly" aria-valuetext={`${percent}% exploded`} style={{ '--progress': `${percent}%` } as React.CSSProperties} />
+        <div className="teardown-label"><span className="slider-icon"><Layers3 size={19} strokeWidth={1.5} /></span><div><h2>{boardMode ? "Inside the circuits" : "Take it apart"}</h2><p>One layer at a time.</p></div></div>
+        <div className="slider-control"><div className="slider-endpoints"><button disabled={demo || (!boardMode && !!state.isolatedId)} onClick={() => boardMode ? setBoardProgress(0) : dispatch({ type: 'explosion', value: 0 })}>Assembled</button><span className="explosion-value">{percent}<span>%</span></span><button disabled={demo || (!boardMode && !!state.isolatedId)} onClick={() => boardMode ? setBoardProgress(1) : dispatch({ type: 'explosion', value: 1 })}>All parts <MoveUpRight size={11} /></button></div>
+          <input type="range" min="0" max="100" step="1" value={percent} disabled={demo || (!boardMode && !!state.isolatedId)} onChange={e => boardMode ? setBoardProgress(Number(e.target.value)/100) : dispatch({ type: 'explosion', value: Number(e.target.value) / 100 })} aria-label="Explode assembly" aria-valuetext={`${percent}% exploded`} style={{ '--progress': `${percent}%` } as React.CSSProperties} />
           <div className="slider-ticks" aria-hidden="true">{Array.from({ length: 21 }, (_, i) => <i key={i} />)}</div>
         </div>
         <button className="reset-button" onClick={reset}><RotateCcw size={15} />Reset view</button>

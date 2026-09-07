@@ -98,7 +98,7 @@ await mkdir(path.dirname(output), { recursive: true });
 const ffmpeg = process.env.FFMPEG_PATH || (existsSync('/opt/homebrew/bin/ffmpeg') ? '/opt/homebrew/bin/ffmpeg' : 'ffmpeg');
 console.log(`Encoding ${output}`);
 await new Promise((resolve, reject) => {
-  const child = spawn(ffmpeg, ['-y', '-hide_banner', '-framerate', String(fps), '-start_number', '0', '-i', path.join(framesDir, 'frame-%05d.jpg'), '-frames:v', String(totalFrames), '-an', '-c:v', 'libx264', '-preset', 'medium', '-crf', '18', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', output], { stdio: 'inherit' });
+  const child = spawn(ffmpeg, ['-y', '-hide_banner', '-framerate', String(fps), '-start_number', '0', '-i', path.join(framesDir, 'frame-%05d.jpg'), '-frames:v', String(totalFrames), '-an', '-vf', 'scale=in_range=full:out_range=tv', '-color_range', 'tv', '-c:v', 'libx264', '-preset', 'medium', '-crf', '18', '-pix_fmt', 'yuv420p', '-movflags', '+faststart', output], { stdio: 'inherit' });
   child.once('error', reject);
   child.once('exit', code => code === 0 ? resolve() : reject(new Error(`ffmpeg exited with code ${code}`)));
 });

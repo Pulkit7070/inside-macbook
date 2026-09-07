@@ -95,7 +95,7 @@ export const transforms: Record<string, { at: Vec3; spread: Vec3 }> = {
   "left-fan": {
     "at": [
       -1.96,
-      0.045,
+      0.09,
       -0.98
     ],
     "spread": [
@@ -107,7 +107,7 @@ export const transforms: Record<string, { at: Vec3; spread: Vec3 }> = {
   "right-fan": {
     "at": [
       1.96,
-      0.045,
+      0.09,
       -0.98
     ],
     "spread": [
@@ -307,7 +307,7 @@ export default function MacBook({ state, lid = 1.945, onSelect, reducedMotion }:
   const models = useMemo<Record<string, ReactNode>>(() => ({
     'top-case': <TopCase />, 'bottom-cover': <BottomCover />,
     keyboard: <Keyboard />, trackpad: <Trackpad />, 'logic-board': <LogicBoard />, processor: <Processor />,
-    'left-fan': <Fan />, 'right-fan': <Fan flipped />, heatsink: <HeatSink />,
+    'left-fan': <group scale={[1,.65,1]}><Fan /></group>, 'right-fan': <group scale={[1,.65,1]}><Fan flipped /></group>, heatsink: <HeatSink />,
     'left-speaker': <Speaker />, 'right-speaker': <Speaker />,
     'battery-left': <Battery />, 'battery-center': <Battery center />, 'battery-right': <Battery />,
     'left-io': <IOBoard />, 'right-io': <IOBoard right />, magsafe: <IOBoard magsafe />,

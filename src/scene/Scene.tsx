@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import MacBook from './MacBook';
 import { type ExplorerState } from '../state/explorer';
 
-export type View = 'perspective' | 'top' | 'front';
+export type View = 'perspective' | 'top' | 'front' | 'bottom' | 'left' | 'right';
 
 class CanvasBoundary extends Component<{ children: ReactNode }, { error: boolean }> {
   state = { error: false };
@@ -31,7 +31,9 @@ function CameraRig({ view, resetKey, isolatedId, explosion, demoAngle, reducedMo
     const centerY = isolatedId ? isolatedId === 'display' ? 2 : 0.5 : 1.15 + explosion * 0.65;
     const centerZ = isolatedId ? 0 : view === 'top' ? -0.7 - explosion * 0.75 : -0.1;
     target.current.set(0, centerY, centerZ);
-    if (view === 'top') destination.current.set(0, centerY + distance, centerZ + 0.001);
+    if (view === 'bottom') destination.current.set(0, centerY - distance, centerZ + .001);
+    else if(view === 'left' || view === 'right') destination.current.set((view === 'left' ? -1 : 1)*distance, .3, 0);
+    else if (view === 'top') destination.current.set(0, centerY + distance, centerZ + 0.001);
     else if (view === 'front') destination.current.set(0, centerY + distance * 0.2, distance);
     else destination.current.set(distance * 0.53, centerY + distance * 0.44, distance * 0.72);
     active.current = true;
@@ -58,17 +60,17 @@ function CameraRig({ view, resetKey, isolatedId, explosion, demoAngle, reducedMo
     else frame.invalidate();
   });
   return <OrbitControls ref={controls} makeDefault enabled={demoAngle === undefined && explosion < .98} enablePan={false} minDistance={2.5} maxDistance={50}
-    minPolarAngle={0} maxPolarAngle={Math.PI / 2 + 0.17} enableDamping={!reducedMotion} dampingFactor={0.09}
+    minPolarAngle={0} maxPolarAngle={Math.PI} enableDamping={!reducedMotion} dampingFactor={0.09}
     onStart={() => { active.current = false; }} />;
 }
 
 export default function Scene({ state, onSelect, view, resetKey, reducedMotion, lid, demoAngle, zoom }: {
   state: ExplorerState; onSelect: (id: string) => void; view: View; resetKey: number; reducedMotion: boolean; lid?: number; demoAngle?: number; zoom: number;
 }) {
-  return <CanvasBoundary><Canvas shadows frameloop="demand" dpr={[1, 1.7]} camera={{ position: [8, 7.5, 11], fov: 36, near: 0.1, far: 100 }}
+  return <CanvasBoundary><Canvas resize={{debounce:0}} shadows frameloop="demand" dpr={[1, 1.7]} camera={{ position: [8, 7.5, 11], fov: 36, near: 0.1, far: 100 }}
     gl={{ antialias: true, alpha: true, preserveDrawingBuffer: true }} aria-label="Interactive three-dimensional MacBook model"
     fallback={<div className="canvas-fallback">WebGL is unavailable. Use the component list to explore the parts.</div>}>
-    <ambientLight intensity={0.9} />
+    <ambientLight intensity={0.9} /><directionalLight position={[1,-6,3]} intensity={1.5} color="#dce7ee" />
     <directionalLight position={[3, 9, 5]} intensity={3.1} castShadow shadow-mapSize={[1024, 1024]} shadow-bias={-0.001} />
     <directionalLight position={[-7, 5, -3]} intensity={1.3} color="#e2e9ee" />
     <Suspense fallback={null}>

@@ -11,9 +11,16 @@ function rounded(w: number, h: number, r: number, x = 0, y = 0) {
   const s = new THREE.Shape(), l = x - w / 2, b = y - h / 2;
   s.moveTo(l + r, b); s.lineTo(l + w - r, b); s.quadraticCurveTo(l + w, b, l + w, b + r); s.lineTo(l + w, b + h - r); s.quadraticCurveTo(l + w, b + h, l + w - r, b + h); s.lineTo(l + r, b + h); s.quadraticCurveTo(l, b + h, l, b + h - r); s.lineTo(l, b + r); s.quadraticCurveTo(l, b, l + r, b); return s;
 }
-function Plate({ shape, depth, y = 0, color = ALUMINUM, metalness = 0.65 }: { shape: THREE.Shape; depth: number; y?: number; color?: string; metalness?: number }) {
-  return <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, y, 0]} castShadow receiveShadow><extrudeGeometry args={[shape, { depth, bevelEnabled: false, curveSegments: 28 }]} /><meshStandardMaterial color={color} metalness={metalness} roughness={0.38} /></mesh>;
+function Plate({ shape, depth, y = 0, color = ALUMINUM, metalness = 0.65, tapered = false }: { shape: THREE.Shape; depth: number; y?: number; color?: string; metalness?: number; tapered?: boolean }) {
+  const geometry = useMemo(() => {
+    const g = new THREE.ExtrudeGeometry(shape, {depth, steps:8, bevelEnabled:false, curveSegments:32});
+    if (tapered) { const p = g.attributes.position; for(let i=0;i<p.count;i++) { const t=THREE.MathUtils.smoothstep(p.getZ(i)/depth,.65,1);p.setXY(i,p.getX(i)*(1-.013*t),p.getY(i)*(1-.018*t)); } g.computeVertexNormals(); }
+    return g;
+  }, [shape,depth,tapered]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
+  return <mesh geometry={geometry} rotation={[Math.PI / 2, 0, 0]} position={[0, y, 0]} castShadow receiveShadow><meshStandardMaterial color={color} metalness={metalness} roughness={0.38} /></mesh>;
 }
+
 function Screw({ position }: { position: V3 }) {
   return <group position={position}><mesh><cylinderGeometry args={[0.029, 0.029, 0.008, 12]} /><meshStandardMaterial color="#a7aaa5" metalness={0.85} roughness={0.3} /></mesh><mesh position={[0, 0.005, 0]}><boxGeometry args={[0.03, 0.002, 0.006]} /><meshStandardMaterial color="#282d28" /></mesh></group>;
 }
@@ -25,27 +32,36 @@ function Grille({ x }: { x: number }) {
     for (let i = 0; i < 10; i++) for (let j = 0; j < 90; j++) { o.position.set(x + (i - 4.5) * 0.018, 0.021, -1.83 + j * 0.025); o.rotation.x = -Math.PI / 2; o.updateMatrix(); mesh.setMatrixAt(i * 90 + j, o.matrix); } mesh.instanceMatrix.needsUpdate = true;
   }} />;
 }
+function Port({side,z,width,height}: {side:number;z:number;width:number;height:number}) {
+  const outline=useMemo(()=>rounded(width+.035,height+.026,Math.min(.04,height/2)),[width,height]);
+  const opening=useMemo(()=>rounded(width,height,Math.min(.03,height/2)),[width,height]);
+  return <group position={[side*3.128,-.092,z]} rotation={[0,side*Math.PI/2,0]}><mesh><shapeGeometry args={[outline]} /><meshStandardMaterial color="#737a7e" side={THREE.DoubleSide} /></mesh><mesh position={[0,0,.001]}><shapeGeometry args={[opening]} /><meshStandardMaterial color="#101718" side={THREE.DoubleSide} /></mesh></group>;
+}
 export function TopCase() {
   const deck = useMemo(() => { const s = rounded(6.252, 4.424, 0.17); s.holes.push(rounded(5.59, 2.30, 0.085, 0, -0.72)); s.holes.push(rounded(2.62, 1.63, 0.10, 0, 1.29)); return s; }, []);
   const walls = useMemo(() => { const s = rounded(6.252, 4.424, 0.17); s.holes.push(rounded(6.13, 4.30, 0.13)); return s; }, []);
   return <group>
-    <Plate shape={deck} depth={0.032} y={0.02} /><Plate shape={walls} depth={0.185} y={0.005} />
+    <Plate shape={deck} depth={0.032} y={0.02} /><Plate shape={walls} tapered depth={0.185} y={0.005} />
     <Grille x={-2.96} /><Grille x={2.96} />
     <Solid size={[0.96, 0.014, 0.085]} position={[0, 0.014, 2.185]} color="#959b9c" radius={0.006} />
     <Solid size={[5.15, 0.07, 0.13]} position={[0, -0.022, -2.14]} color="#161a19" />
-    {[-1.60, -1.10, -0.60].map((z, i) => <Solid key={z} size={[0.008, 0.073, i === 0 ? 0.33 : 0.24]} position={[-3.127, -0.092, z]} color="#161b1b" radius={0.003} />)}
-    <mesh rotation={[0, 0, Math.PI / 2]} position={[-3.128, -0.092, -0.15]}><cylinderGeometry args={[0.041, 0.041, 0.006, 20]} /><meshStandardMaterial color="#141919" /></mesh>
-    <Solid size={[0.008, 0.08, 0.37]} position={[3.127, -0.09, -1.49]} color="#171c1b" radius={0.003} />
-    <Solid size={[0.008, 0.072, 0.24]} position={[3.127, -0.09, -0.92]} color="#171c1b" radius={0.003} />
-    <Solid size={[0.008, 0.025, 0.48]} position={[3.127, -0.09, -0.19]} color="#171c1b" radius={0.003} />
+    <Port side={-1} z={-1.60} width={.33} height={.073}/><Port side={-1} z={-1.10} width={.24} height={.073}/><Port side={-1} z={-.60} width={.24} height={.073}/>
+    <mesh rotation={[0,0,Math.PI/2]} position={[-3.129,-.092,-.15]}><cylinderGeometry args={[.04,.04,.004,24]}/><meshStandardMaterial color="#131719"/></mesh>
+    <Port side={1} z={-1.49} width={.37} height={.08}/><Port side={1} z={-.92} width={.24} height={.072}/><Port side={1} z={-.19} width={.48} height={.025}/>
+
   </group>;
 }
 export function BottomCover() {
-  return <group><Solid size={[6.242, 0.025, 4.414]} radius={0.012} color="#aab0b3" />
-    {[-2.60, 2.60].flatMap(x => [-1.69, 1.69].map(z => <mesh key={`${x}${z}`} position={[x, -0.021, z]}><cylinderGeometry args={[0.15, 0.16, 0.022, 32]} /><meshStandardMaterial color="#292e2b" roughness={0.86} /></mesh>))}
-    {[-2.93, 2.93].flatMap(x => [-1.94, 1.94].map(z => <Screw key={`${x}${z}`} position={[x, 0.017, z]} />))}
+  const outline = useMemo(() => rounded(6.15,4.31,.22), []);
+  const texture = useMemo(() => { const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=256;const c=canvas.getContext('2d')!;c.font='500 84px Arial';c.fillStyle='#737a7e';c.textAlign='center';c.fillText('MacBook Pro',512,145);const t=new THREE.CanvasTexture(canvas);t.colorSpace=THREE.SRGBColorSpace;return t;}, []);
+  useEffect(() => () => texture.dispose(), [texture]);
+  return <group><Plate shape={outline} depth={.012} y={.012} color="#aab0b3" />
+    {[-2.65,2.65].flatMap(x=>[-1.71,1.71].map(z=><mesh key={`${x}${z}`} position={[x,-.007,z]}><cylinderGeometry args={[.13,.14,.014,40]} /><meshStandardMaterial color="#222729" roughness={.9} /></mesh>))}
+    <mesh rotation={[Math.PI/2,0,0]} position={[0,-.001,0]}><planeGeometry args={[2.3,.575]} /><meshStandardMaterial map={texture} transparent roughness={.9} depthWrite={false} /></mesh>
+    {[-2.9,-1.1,1.1,2.9].flatMap(x=>[-1.94,1.94].map(z=><group key={`${x}${z}`} position={[x,-.001,z]} rotation={[Math.PI,0,0]}><Screw position={[0,0,0]} /></group>))}
   </group>;
 }
+
 export function Keyboard() {
   const texture = useMemo(() => {
     const canvas = document.createElement('canvas'); canvas.width = 1680; canvas.height = 700; const c = canvas.getContext('2d')!;

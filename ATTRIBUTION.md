@@ -37,3 +37,9 @@ React, Three.js, React Three Fiber, Drei, Lucide, and other package dependencies
 ## Trademarks
 
 MacBook Pro, M5 Pro, Apple silicon, and MagSafe are Apple trademarks. This is an independent educational project and is not affiliated with or endorsed by Apple.
+
+## Studio presentation
+
+[Model X Studio](https://model-x-studio.vercel.app/) informed the floating panels, compact assembly bar, and dark studio treatment. The user-provided Human Atlas video informed the miniature component tray. No assets or code from these references are redistributed.
+
+Additional exterior checks used the [2026 side profile](https://content.abt.com/media/images/products/BDP_Images/apple-macbook-pro-14-2026-silver-left.jpg) and a [14-inch M5 underside photograph](https://www.macotakara.jp/macintosh/entry-49753.html). The latter is the 2025 model and is used only as a visual comparison for the cover, feet, and engraving, alongside the 2026 service references. Circuit-level sources and the limits of the teaching layout are recorded in `src/data/board.ts`.

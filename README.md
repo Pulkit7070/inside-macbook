@@ -1,6 +1,6 @@
 # Inside a MacBook
 
-An interactive 3D study of the 14-inch MacBook Pro (2026, M5 Pro). Pull apart 20 original, simplified assemblies; explore five systems; select and isolate a component; and play a 24-second cinematic walkthrough.
+An interactive 3D study of the 14-inch MacBook Pro (2026, M5 Pro). Pull apart 20 original, simplified assemblies; explore five systems and eight circuit function groups; select and isolate a component; and play a 24-second cinematic walkthrough.
 
 ![The MacBook explorer in its exploded view](docs/preview.png)
 
@@ -19,11 +19,12 @@ Open http://127.0.0.1:4173. No API keys, accounts, or external model downloads a
 
 - Drag to orbit, scroll or use +/− to zoom.
 - Scrub the bottom slider from assembled to exploded, or choose **All parts** for a labeled tray of all 20 assemblies. Selecting a tray item keeps every piece available.
+- Choose **Explore logic board** to inspect eight functional groups, including the M5 Pro, memory, NAND storage, power, I/O, wireless, audio, and PCB interconnects. Select a group and scrub its separation slider; **Back to MacBook** restores the notebook assembly view. These groups explain circuitry and are not eight additional physical parts.
 - Toggle system visibility or search components. Press `/` to focus search.
 - Select a part in the scene or list. Selecting an internal component from the list opens the assembly so you can see it.
 - Isolate a component to inspect it; returning restores the previous system filters.
-- Choose perspective, top, or front views. Reset restores the initial view and all components.
-- Watch the teardown plays the shared model through a deterministic 24-second timeline. The completed demo leaves all 20 pieces ready to explore. Exit demo or press Escape early to return to your previous exploration state.
+- Choose perspective, top, front, bottom, left, or right views. Reset restores the initial view and all components.
+- Watch the teardown plays the shared model through a deterministic 24-second timeline. The tour opens the 20-assembly tray, highlights both fans, then spends its final 12 seconds separating and explaining eight circuit function groups. It ends in the logic-board study. Exit demo or press Escape early to return to your previous exploration state.
 
 ## Validate and build
 
@@ -39,6 +40,7 @@ Browser checks use a local Vite server automatically. Set `PLAYWRIGHT_CHROMIUM_E
 
 ## Structure
 
+- `src/data/board.ts` and `src/scene/BoardDetail.tsx`: the reference-linked circuit study and its procedural visualization.
 - `src/data/parts.ts`: component explanations and system membership.
 - `src/state/explorer.ts`: selection, filters, isolation, and explosion state.
 - `src/scene/geometry.tsx`: original procedural meshes and textures.
