@@ -47,3 +47,7 @@ Additional exterior checks used the [2026 side profile](https://content.abt.com/
 ## Original film soundtrack
 
 The edited Space Black film uses a procedurally composed original instrumental and synthesized sound effects from `scripts/compose-score.py`. No audio from the user’s YouTube reference is included.
+
+### Space Black finishing pass
+
+Keyboard and lid proportions were compared with Google Images results and Apple's [14-inch MacBook Pro product imagery](https://www.apple.com/shop/buy-mac/macbook-pro/14-inch-m5-max). Keycaps and the lid emblem are procedural geometry; product photos are reference only and are not bundled. Apple and the Apple logo are trademarks of Apple Inc.; this independent educational project is not affiliated with Apple.

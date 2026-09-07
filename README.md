@@ -68,7 +68,7 @@ python3 scripts/compose-score.py
 node scripts/render-film.mjs --mix-only
 ```
 
-Use `node scripts/render-film.mjs` to render fresh picture and mix it. The result is `artifacts/macbook-space-black-film.mp4`, with AAC stereo audio. The score contains a 15-second original electronic passage at 128 BPM plus transition sounds, timed to the six shots. No audio was extracted from the YouTube reference. Install NumPy in a Python environment if unavailable; the score script uses no external audio samples.
+Use `node scripts/render-film.mjs` to render fresh picture and mix it. The result is `artifacts/macbook-space-black-film.mp4`, with AAC stereo audio. The separate soundtrack is `artifacts/macbook-hiphop-score.wav`. The score contains a 15-second original hip-hop passage at 96 BPM plus transition sounds, timed to the six shots. No audio was extracted from the YouTube reference. Install NumPy in a Python environment if unavailable; the score script uses no external audio samples.
 
 Running the renderer without these film options instead captures the 24-second website demo to `artifacts/inside-macbook-m5-pro.mp4`. The verifier checks codec, dimensions, duration, frame rate, and available frame count; `--extract` writes review frames. `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`, `FFMPEG_PATH`, and `FFPROBE_PATH` can select installed executables. Use `node scripts/render-video.mjs --help` for subset captures, resolution options, and safe resume behavior. The MP4 is generated locally rather than stored in Git. The verifier writes a JSON report alongside extracted review frames.
 
@@ -79,3 +79,5 @@ The geometry is an original educational illustration, not a service model. Dimen
 ## License
 
 Original source and procedural geometry are MIT licensed. Dependencies retain their own licenses.
+
+Camera presets focus the selected component at the center of the stage and keep its original materials. Use **Show full assembly** to return to the previous teardown amount. The full miniature tray remains available between inspections.

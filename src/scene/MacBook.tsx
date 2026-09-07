@@ -280,16 +280,6 @@ function Assembly({ id, explosion, selected, isolated, reducedMotion, onSelect, 
     group.current.rotation.set(id !== "display" ? 1.1 * tray : 0, -.12 * tray, 0);
     if (group.current.position.distanceTo(destination) > 0.001) frame.invalidate();
   });
-  useLayoutEffect(() => {
-    group.current?.traverse(object => {
-      if (!(object instanceof THREE.Mesh)) return;
-      const materials = Array.isArray(object.material) ? object.material : [object.material];
-      materials.forEach(mat => {
-        if ('emissive' in mat) { (mat as THREE.MeshStandardMaterial).emissive.set(selected && !isolated ? '#e5753d' : '#000000'); (mat as THREE.MeshStandardMaterial).emissiveIntensity = selected && !isolated ? 0.075 : 0; }
-      });
-    });
-    invalidate();
-  }, [selected, isolated, invalidate]);
   const click = (event: ThreeEvent<MouseEvent>) => {
     event.stopPropagation(); if (event.delta < 5) onSelect(id);
   };

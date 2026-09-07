@@ -6,7 +6,7 @@ import {initialState} from '../state/explorer';
 import './film.css';
 const clamp=(v:number)=>Math.min(1,Math.max(0,v));
 const ease=(v:number)=>{const x=clamp(v);return x*x*(3-2*x);};
-const cuts=[0,3.4375,6.25,9.0625,13.75,17.5,20];
+const cuts=[0,3.75,6.25,8.75,13.75,17.5,20];
 export default function Film(){
  const [time,setTime]=useState(0);
  useEffect(()=>{window.__atlasRenderFrame=async t=>{flushSync(()=>setTime(t));await document.fonts.ready;await new Promise<void>(r=>requestAnimationFrame(()=>requestAnimationFrame(()=>requestAnimationFrame(()=>r()))));};return()=>{delete window.__atlasRenderFrame;};},[]);
@@ -25,7 +25,7 @@ export default function Film(){
  return <main className={`film shot-${shot}`}>
   <div className="film-brand">inside<span>.</span></div><span className="film-edition">AN OBJECT STUDY / 001</span>
   <div className="film-stage" style={{transform:`translateX(${entry*(shot%2?70:-70)}px) scale(${zoom+exit*.10})`,filter:`blur(${(entry+exit)*5}px)`}}>
-   {board?<BoardDetail progress={ease(p)} selectedId={p<.4?'board-soc':p<.7?'board-memory':'board-storage'} onSelect={()=>{}}/>:<Scene state={state} view={isolated?'top':'perspective'} resetKey={shot} reducedMotion={true} zoom={isolated?1.25:1} demoAngle={isolated?undefined:.52+p*.23} lid={shot===2?.3+ease(p/.5)*1.64:1.945} onSelect={()=>{}}/>}
+   {board?<BoardDetail progress={ease(p)} selectedId={p<.4?'board-soc':p<.7?'board-memory':'board-storage'} onSelect={()=>{}}/>:<Scene state={state} view={isolated?'top':'perspective'} resetKey={shot} reducedMotion={true} zoom={isolated?1.25:1} demoAngle={isolated?undefined:shot===5?.6+p*2.6:.52+p*.23} lid={shot===2?.3+ease(p/.5)*1.64:1.945} onSelect={()=>{}}/>}
   </div>
   <div className="film-copy" style={{opacity:titleIn*titleOut,transform:`translateY(${(1-titleIn)*28}px)`}}><p>{subtitles[shot]}</p><h1>{titles[shot]}</h1><i style={{transform:`scaleX(${ease(local/.75)})`}}/></div>
   {shot===0&&<div className="film-orbit" style={{transform:`translate(-50%,-50%) rotate(${p*32}deg) scale(${.85+p*.25})`,opacity:.12*titleIn}}/>}

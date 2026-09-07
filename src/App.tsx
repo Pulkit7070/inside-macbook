@@ -1,6 +1,6 @@
 import { flushSync } from 'react-dom';
 import { Component, lazy, Suspense, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react';
-import { ArrowDownLeft, ArrowRight, ArrowUpRight, Box, Check, ChevronDown, ChevronLeft, CircleHelp, Cpu, Eye, Focus, Layers3, Maximize2, Minus, MousePointer2, MoveUpRight, Pause, Play, Plus, RotateCcw, Search, SlidersHorizontal, X } from 'lucide-react';
+import { ArrowDownLeft, ArrowRight, ArrowUpRight, Check, ChevronDown, ChevronLeft, CircleHelp, Cpu, Eye, Focus, Layers3, Maximize2, Minus, MousePointer2, MoveUpRight, Pause, Play, Plus, RotateCcw, Search, SlidersHorizontal, X } from 'lucide-react';
 import { boardParts, BOARD_DISCLAIMER } from './data/board';
 import { getPart, parts, systems } from './data/parts';
 import { initialState, reducer, visibleParts } from './state/explorer';
@@ -93,6 +93,15 @@ export default function App() {
     dispatch({ type: 'select', id }); setMobileParts(false);
     if (fromList && !state.isolatedId && !['top-case', 'display', 'keyboard', 'trackpad'].includes(id) && state.explosion < 0.6) dispatch({ type: 'explosion', value: 0.75 });
   };
+  const showAssembly = () => {
+    dispatch({ type: 'clear-isolation' });
+    if (state.explosion > .65) setView('perspective');
+  };
+  const changeView = (next: View) => {
+    setView(next); setResetKey(n => n + 1);
+    if (state.selectedId) dispatch({ type: 'isolate' });
+    else if (state.explosion > .65) dispatch({ type: 'explosion', value: .6 });
+  };
   const startDemo = () => { setDemoTime(0); setMobileParts(false); setDemo(true); };
 
   return <div className={`app ${boardMode ? 'board-mode' : ''} ${focusMode ? 'focus-mode' : ''} ${demo ? 'demo-mode' : ''} ${renderMode ? 'render-mode' : ''} ${!boardMode && renderedState.explosion >= .98 && !renderedState.isolatedId ? 'inventory-mode' : ''}`}>
@@ -141,8 +150,8 @@ export default function App() {
         {!demo && <button className="board-entry" onClick={() => {setBoardOpen(!boardOpen);setMobileParts(false);}}><Cpu size={14}/>{boardOpen ? 'Back to MacBook' : 'Explore logic board'}<ArrowUpRight size={12}/></button>}
         {boardMode && <aside className="board-details" aria-label="Circuit details"><div className="eyebrow">CIRCUIT STUDY / {boardParts.indexOf(boardSelected)+1} OF 8</div><h2>{boardSelected.name}</h2><p>{boardSelected.description}</p><p>{boardSelected.detail}</p><a href={boardSelected.source} target="_blank" rel="noreferrer">Reference <ArrowUpRight size={12}/></a><small>{BOARD_DISCLAIMER}</small></aside>}
         {!demo && <>
-          <div className="scene-top-controls"><div className="view-switch" aria-label="Camera view">{(['perspective', 'top', 'front', 'bottom', 'left', 'right'] as const).map(v => <button key={v} className={view === v ? 'active' : ''} aria-pressed={view === v} onClick={() => setView(v)}>{v.charAt(0).toUpperCase() + v.slice(1)}</button>)}</div>
-            {state.isolatedId && <button className="return-button" onClick={() => dispatch({ type: 'clear-isolation' })}><ChevronLeft size={14} />Show assembly</button>}
+          <div className="scene-top-controls"><div className="view-switch" aria-label="Camera view">{(['perspective', 'top', 'front', 'bottom', 'left', 'right'] as const).map(v => <button key={v} className={view === v ? 'active' : ''} aria-pressed={view === v} onClick={() => changeView(v)}>{v.charAt(0).toUpperCase() + v.slice(1)}</button>)}</div>
+            {state.isolatedId && <button className="return-button" onClick={showAssembly}><ChevronLeft size={14} />Show assembly</button>}
           </div>
           <div className="viewport-actions"><button aria-label="Zoom in" title="Zoom in" disabled={zoom >= 1.6} onClick={() => setZoom(v => Math.min(1.6, v + 0.15))}><Plus size={17} /></button><button aria-label="Zoom out" title="Zoom out" disabled={zoom <= 0.7} onClick={() => setZoom(v => Math.max(0.7, v - 0.15))}><Minus size={17} /></button><span /><button aria-label={focusMode ? 'Exit expanded view' : 'Expand view'} title="Expand view" onClick={() => setFocusMode(v => !v)}><Maximize2 size={15} /></button></div>
           <div className="orbit-hint"><MousePointer2 size={12} /><span>Drag to rotate</span><i /><span>Scroll to zoom</span></div>
@@ -154,11 +163,11 @@ export default function App() {
       <aside className={`inspector ${selected ? 'has-selection' : ''}`} aria-label="Component details" aria-live="polite">
         {selected ? <>
           <div className="inspector-top"><span className="section-label">COMPONENT DETAILS</span><button aria-label="Close component details" onClick={() => { dispatch({ type: 'clear-isolation' }); dispatch({ type: 'select', id: null }); }}><X size={15} /></button></div>
-          <div className="component-symbol">{state.explosion >= .98 ? <Suspense fallback={null}><Scene state={{...initialState,selectedId:selected.id,isolatedId:selected.id}} onSelect={() => {}} view="perspective" resetKey={0} reducedMotion={true} zoom={1.6} /></Suspense> : <><Box size={42} strokeWidth={1} /><span className="symbol-corner">+</span></>}</div>
+          <div className="component-symbol"><SceneBoundary><Suspense fallback={null}><Scene state={{...initialState,selectedId:selected.id,isolatedId:selected.id}} onSelect={() => {}} view={view} resetKey={resetKey} reducedMotion={true} zoom={1.6} /></Suspense></SceneBoundary></div>
           <div className="system-tag"><span style={{ background: selectedSystem?.color }} />{selectedSystem?.label}</div>
           <h2>{selected.name}</h2><p className="part-description">{selected.description}</p><p className="part-detail">{selected.detail}</p><p className="part-location"><b>POSITION</b><br />{selected.location}</p>
           <div className="material-info"><span className="section-label">MATERIAL / ASSEMBLY</span><p>{selected.material}</p></div>
-          <button className="isolate-button" onClick={() => dispatch({ type: state.isolatedId ? 'clear-isolation' : 'isolate' })}>{state.isolatedId ? <Layers3 size={15} /> : <Focus size={15} />}{state.isolatedId ? 'Show full assembly' : 'Isolate component'}<ArrowUpRight size={14} /></button>
+          <button className="isolate-button" onClick={() => state.isolatedId ? showAssembly() : dispatch({ type: 'isolate' })}>{state.isolatedId ? <Layers3 size={15} /> : <Focus size={15} />}{state.isolatedId ? 'Show full assembly' : 'Isolate component'}<ArrowUpRight size={14} /></button>
           <div className="selection-note">{state.isolatedId ? 'Only this component is visible.' : 'Selected in the 3D view.'}</div>
         </> : <>
           <div className="inspector-top"><span className="section-label">A NEW PERSPECTIVE</span><ArrowDownLeft size={17} /></div>

@@ -45,7 +45,7 @@ function Package({ part, index, progress, selected, onSelect }: {
     {progress > .02 && <Line points={[[part.position[0], .05, part.position[2]], p]} color={part.color} transparent opacity={.3} lineWidth={1} dashed dashSize={.07} gapSize={.06} />}
     <group position={p} onClick={e => { e.stopPropagation(); onSelect(part.id); }}>
       <RoundedBox args={[w, h, d]} radius={.035} smoothness={2}>
-        <meshStandardMaterial color={selected ? '#4c5b56' : trace ? '#183c31' : '#18211f'} roughness={.57} metalness={.4} emissive={part.color} emissiveIntensity={selected ? .23 : .025} />
+        <meshStandardMaterial color={trace ? '#183c31' : '#18211f'} roughness={.57} metalness={.4} emissiveIntensity={0} />
       </RoundedBox>
       {!trace && <mesh position={[0, h / 2 + .012, 0]}>
         <boxGeometry args={[w * .84, .025, d * .8]} />

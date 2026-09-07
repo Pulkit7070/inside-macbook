@@ -3,7 +3,7 @@ import { RoundedBox } from '@react-three/drei';
 import * as THREE from 'three';
 
 type V3 = [number, number, number];
-const ALUMINUM = '#242729';
+const ALUMINUM = '#121416';
 export function Solid({ size, position, color = ALUMINUM, radius = 0.035, metalness = 0.65, roughness = 0.36, children }: { size: V3; position?: V3; color?: string; radius?: number; metalness?: number; roughness?: number; children?: ReactNode }) {
   return <RoundedBox args={size} radius={Math.min(radius, Math.min(...size) / 2.1)} smoothness={3} position={position} castShadow receiveShadow><meshStandardMaterial color={color} metalness={metalness} roughness={roughness} />{children}</RoundedBox>;
 }
@@ -25,7 +25,7 @@ function Screw({ position }: { position: V3 }) {
   return <group position={position}><mesh><cylinderGeometry args={[0.029, 0.029, 0.008, 12]} /><meshStandardMaterial color="#a7aaa5" metalness={0.85} roughness={0.3} /></mesh><mesh position={[0, 0.005, 0]}><boxGeometry args={[0.03, 0.002, 0.006]} /><meshStandardMaterial color="#282d28" /></mesh></group>;
 }
 function Grille({ x }: { x: number }) {
-  const g = useMemo(() => new THREE.CircleGeometry(0.006, 5), []), m = useMemo(() => new THREE.MeshStandardMaterial({ color: '#666b6b', side: THREE.DoubleSide }), []);
+  const g = useMemo(() => new THREE.CircleGeometry(0.006, 5), []), m = useMemo(() => new THREE.MeshStandardMaterial({ color: '#141619', side: THREE.DoubleSide }), []);
   useEffect(() => () => { g.dispose(); m.dispose(); }, [g, m]);
   return <instancedMesh args={[g, m, 900]} ref={mesh => {
     if (!mesh) return; const o = new THREE.Object3D();
@@ -55,7 +55,7 @@ export function BottomCover() {
   const outline = useMemo(() => rounded(6.15,4.31,.22), []);
   const texture = useMemo(() => { const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=256;const c=canvas.getContext('2d')!;c.font='500 84px Arial';c.fillStyle='#737a7e';c.textAlign='center';c.fillText('MacBook Pro',512,145);const t=new THREE.CanvasTexture(canvas);t.colorSpace=THREE.SRGBColorSpace;return t;}, []);
   useEffect(() => () => texture.dispose(), [texture]);
-  return <group><Plate shape={outline} depth={.012} y={.012} color="#242729" />
+  return <group><Plate shape={outline} depth={.012} y={.012} color="#131517" />
     {[-2.65,2.65].flatMap(x=>[-1.71,1.71].map(z=><mesh key={`${x}${z}`} position={[x,-.007,z]}><cylinderGeometry args={[.13,.14,.014,40]} /><meshStandardMaterial color="#222729" roughness={.9} /></mesh>))}
     <mesh rotation={[Math.PI/2,0,0]} position={[0,-.001,0]}><planeGeometry args={[2.3,.575]} /><meshStandardMaterial map={texture} transparent roughness={.9} depthWrite={false} /></mesh>
     {[-2.9,-1.1,1.1,2.9].flatMap(x=>[-1.94,1.94].map(z=><group key={`${x}${z}`} position={[x,-.001,z]} rotation={[Math.PI,0,0]}><Screw position={[0,0,0]} /></group>))}
@@ -63,40 +63,77 @@ export function BottomCover() {
 }
 
 export function Keyboard() {
-  const texture = useMemo(() => {
-    const canvas = document.createElement('canvas'); canvas.width = 1680; canvas.height = 700; const c = canvas.getContext('2d')!;
-    c.fillStyle = '#090c0c'; c.fillRect(0, 0, 1680, 700);
+  const { texture, keys } = useMemo(() => {
+    const canvas = document.createElement('canvas'); canvas.width = 1680; canvas.height = 700;
+    const c = canvas.getContext('2d')!;
     const rows = [
-      ['esc', '☼', '☀', '▦', '⌕', '♩', '☾', '◀◀', '▷Ⅱ', '▶▶', '◁', '♪', '♫', '◯'],
-      ['`', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '−', '=', 'delete'],
-      ['tab', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '[', ']', '\\'],
-      ['caps lock', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ';', "'", 'return'],
-      ['shift', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', ',', '.', '/', 'shift'],
-      ['◎ fn', 'control', 'option', '⌘ command', '', '⌘ command', 'option', '◀', '▲\n▼', '▶'],
+      ['esc', '☼', '☀', '▦', '⌕', '♩', '☾', '◀◀', '▷Ⅱ', '▶▶', '◁', '♪', '♫', ''],
+      ['~\n`', '!\n1', '@\n2', '#\n3', '$\n4', '%\n5', '^\n6', '&\n7', '*\n8', '(\n9', ')\n0', '_\n−', '+\n=', '⌫'],
+      ['⇥', 'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{\n[', '}\n]', '|\n\\'],
+      ['⇪', 'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':\n;', "\"\n'", '↩'],
+      ['⇧', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<\n,', '>\n.', '?\n/', '⇧'],
+      ['◎', 'control', 'option', '⌘', '', '⌘', 'option', '◀', '▲', '▶'],
     ];
+    const widths = [
+      [1.5,...Array(12).fill(1),1.5],
+      [...Array(13).fill(1),2],
+      [1.5,...Array(12).fill(1),1.5],
+      [1.75,...Array(11).fill(1),2.25],
+      [2.25,...Array(10).fill(1),2.75],
+      [1,1,1,1.25,5.75,1.25,1,.9167,.9166,.9167],
+    ];
+    const keys: { x:number; z:number; w:number; h:number; touch:boolean }[] = [];
     rows.forEach((row, ri) => {
-      const weights = row.map((_, i) => ri === 5 ? [1, 1, 1, 1.25, 4.75, 1.25, 1, 1, 1, 1][i] : ri === 4 && (i === 0 || i === 11) ? 1.95 : ri === 3 && (i === 0 || i === 12) ? 1.5 : 1);
-      const total = weights.reduce((a, b) => a + b, 0); let x = 14;
+      let x = 10;
       row.forEach((letter, i) => {
-        const w = weights[i] / total * 1652 - 8, y = 13 + ri * 113, h = 103;
-        c.fillStyle = '#343838'; c.beginPath(); c.roundRect(x, y, w, h, 13); c.fill();
-        const gradient = c.createLinearGradient(0, y, 0, y + h); gradient.addColorStop(0, '#232727'); gradient.addColorStop(1, '#141818'); c.fillStyle = gradient; c.beginPath(); c.roundRect(x + 2, y + 2, w - 4, h - 5, 11); c.fill();
-        c.fillStyle = '#c9cece'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = `${letter.length > 2 ? 16 : 26}px Arial`;
-        letter.split('\n').forEach((line, li, a) => c.fillText(line, x + w / 2, y + h / 2 + (li - (a.length - 1) / 2) * 27));
-        if (ri === 0 && i > 0 && i < 13) { c.font = '12px Arial'; c.fillStyle = '#818a87'; c.fillText(`F${i}`, x + w / 2, y + 80); }
-        x += w + 8;
+        const step = widths[ri][i] / 15 * 1660, w = step - 10;
+        const y = 10 + ri * 114, h = 102;
+        const arrow = ri === 5 && i >= 7;
+        const drawKey = (top:number, height:number, legend:string) => {
+          keys.push({x:(x+w/2)/1680*5.49-2.745,z:(top+height/2)/700*2.23-1.115,w:w/1680*5.49,h:height/700*2.23,touch:ri===0&&i===13});
+          c.fillStyle='#e2e3e5'; c.textAlign='center';c.textBaseline='middle';c.font=`${legend.length>3?15:24}px Arial`;
+          legend.split('\n').forEach((line,j,lines)=>c.fillText(line,x+w/2,top+height/2+(j-(lines.length-1)/2)*31));
+          if(ri===0 && i>0 && i<13){c.font='12px Arial';c.fillStyle='#a6a8ab';c.fillText(`F${i}`,x+w/2,top+height-18);}
+        };
+        if(arrow){
+          if(i===8){drawKey(y,47,'▲');drawKey(y+55,47,'▼');}
+          else drawKey(y+55,47,letter);
+        } else drawKey(y,h,letter);
+        x += step;
       });
     });
-    const t = new THREE.CanvasTexture(canvas); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
+    const texture = new THREE.CanvasTexture(canvas); texture.colorSpace=THREE.SRGBColorSpace;texture.anisotropy=8;
+    return {texture,keys};
   }, []);
   useEffect(() => () => texture.dispose(), [texture]);
-  return <group><Solid size={[5.55, 0.02, 2.265]} radius={0.009} color="#0b1010" metalness={0.15} />
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.011, 0]}><planeGeometry args={[5.49, 2.23]} /><meshStandardMaterial map={texture} roughness={0.56} /></mesh>
+  return <group>
+    <Solid size={[5.55,.012,2.265]} position={[0,-.006,0]} radius={.005} color="#08090b" metalness={.08} roughness={.85}/>
+    {keys.map((key,i)=><group key={i} position={[key.x,0,key.z]}>
+      <Solid size={[key.w,.019,key.h]} position={[0,.006,0]} radius={.008} color="#040507" metalness={.05} roughness={.85}/>
+      {key.touch && <mesh position={[0,.016,0]}><cylinderGeometry args={[.12,.12,.002,48]}/><meshStandardMaterial color="#08090a" metalness={.35} roughness={.3}/></mesh>}
+    </group>)}
+    <mesh rotation={[-Math.PI/2,0,0]} position={[0,.0165,0]}><planeGeometry args={[5.49,2.23]}/><meshBasicMaterial map={texture} transparent depthWrite={false} toneMapped={false}/></mesh>
   </group>;
 }
+
+function LidLogo() {
+  const shapes = useMemo(() => {
+    const body = new THREE.Shape();
+    body.moveTo(0,.23);body.bezierCurveTo(-.12,.29,-.24,.32,-.32,.18);
+    body.bezierCurveTo(-.45,-.02,-.23,-.39,-.13,-.39);
+    body.bezierCurveTo(-.06,-.39,-.03,-.34,.03,-.34);
+    body.bezierCurveTo(.10,-.34,.13,-.40,.20,-.38);
+    body.bezierCurveTo(.28,-.35,.34,-.24,.38,-.14);
+    body.bezierCurveTo(.20,-.07,.18,.11,.34,.20);
+    body.bezierCurveTo(.24,.34,.12,.29,0,.23);body.closePath();
+    const leaf = new THREE.Shape();leaf.moveTo(.015,.30);leaf.bezierCurveTo(.005,.43,.10,.51,.20,.52);leaf.bezierCurveTo(.21,.40,.12,.30,.015,.30);leaf.closePath();
+    return [body,leaf];
+  }, []);
+  return <mesh position={[0,.0335,2.01]} rotation={[Math.PI/2,0,0]}><shapeGeometry args={[shapes,32]}/><meshStandardMaterial color="#050607" metalness={.9} roughness={.12} side={THREE.DoubleSide}/></mesh>;
+}
 export function Trackpad() {
-  return <group><Solid size={[2.596, 0.022, 1.603]} radius={0.01} color="#24272a" roughness={0.47} />
-    <Solid size={[2.575, 0.003, 1.58]} position={[0, 0.013, 0]} color="#303438" radius={0.001} roughness={0.58} />
+  return <group><Solid size={[2.596, 0.022, 1.603]} radius={0.01} color="#141619" roughness={0.47} />
+    <Solid size={[2.575, 0.003, 1.58]} position={[0, 0.013, 0]} color="#1a1d20" radius={0.001} roughness={0.58} />
   </group>;
 }
 export function Display({ lid }: { lid: number }) {
@@ -114,7 +151,7 @@ export function Display({ lid }: { lid: number }) {
   }, []);
   useEffect(() => () => texture.dispose(), [texture]);
   return <group rotation={[-lid, 0, 0]}>
-    <Solid size={[6.252, 0.065, 4.20]} position={[0, 0, 2.01]} radius={0.03} color="#25282b" />
+    <Solid size={[6.252, 0.065, 4.20]} position={[0, 0, 2.01]} radius={0.03} color="#151719" /><LidLogo />
     <Solid size={[6.19, 0.014, 4.115]} position={[0, -0.04, 2.01]} radius={0.006} color="#080b0b" metalness={0.08} />
     <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, -0.049, 2.034]}><planeGeometry args={[6.06, 3.936]} /><meshBasicMaterial map={texture} toneMapped={false} /></mesh>
     <Solid size={[0.70, 0.008, 0.19]} position={[0, -0.056, 3.925]} radius={0.003} color="#080b0b" metalness={0.1} />

@@ -27,7 +27,7 @@ function CameraRig({ view, resetKey, isolatedId, explosion, demoAngle, reducedMo
   const isDemo = demoAngle !== undefined;
   useEffect(() => {
     const isSmall = size.width < 550;
-    const distance = (isolatedId ? ['top-case', 'bottom-cover', 'keyboard', 'display', 'heatsink'].includes(isolatedId) ? 11 : 5.5 : 14.5 + explosion * 3.8) * (isSmall ? 1.34 : 1) * (view === 'top' && !isolatedId ? 1 + explosion * 0.25 : 1) / zoom;
+    const distance = (isolatedId ? ['top-case', 'bottom-cover', 'keyboard', 'display', 'heatsink', 'logic-board'].includes(isolatedId) ? 11 : 5.5 : 14.5 + explosion * 3.8) * (isSmall ? 1.34 : 1) * (view === 'top' && !isolatedId ? 1 + explosion * 0.25 : 1) / zoom;
     const centerY = isolatedId ? isolatedId === 'display' ? 2 : 0.5 : 1.15 + explosion * 0.65;
     const centerZ = isolatedId ? 0 : view === 'top' ? -0.7 - explosion * 0.75 : -0.1;
     target.current.set(0, centerY, centerZ);
@@ -59,7 +59,7 @@ function CameraRig({ view, resetKey, isolatedId, explosion, demoAngle, reducedMo
     if (camera.position.distanceTo(destination.current) < 0.01) active.current = false;
     else frame.invalidate();
   });
-  return <OrbitControls ref={controls} makeDefault enabled={demoAngle === undefined && explosion < .98} enablePan={false} minDistance={2.5} maxDistance={50}
+  return <OrbitControls ref={controls} makeDefault enabled={demoAngle === undefined && (explosion < .98 || !!isolatedId)} enablePan={false} minDistance={2.5} maxDistance={50}
     minPolarAngle={0} maxPolarAngle={Math.PI} enableDamping={!reducedMotion} dampingFactor={0.09}
     onStart={() => { active.current = false; }} />;
 }

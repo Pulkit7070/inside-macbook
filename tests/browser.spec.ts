@@ -166,3 +166,37 @@ test('logic board navigation exposes eight functional groups and independent pro
   await expect(details).toHaveCount(0);
   await expect(progress).toHaveValue('100');
 });
+
+test('selected tray component can be inspected with every camera preset', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Left fan', exact: true }).click();
+  await page.getByRole('button', { name: 'Top', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Show full assembly', exact: true })).toBeVisible();
+  await expect(page.locator('.inspector h2')).toHaveText('Left fan');
+  const canvas = page.locator('.assembly-canvas canvas');
+  const images = new Set<string>();
+  for (const view of ['Top', 'Front', 'Bottom', 'Left', 'Right', 'Perspective']) {
+    await page.getByRole('button', { name: view, exact: true }).click();
+    await page.waitForTimeout(350);
+    images.add(await canvas.evaluate(el => (el as HTMLCanvasElement).toDataURL()));
+  }
+  expect(images.size).toBe(6);
+  await page.getByRole('button', { name: 'Show full assembly', exact: true }).click();
+  await expect(page.getByRole('slider', { name: 'Explode assembly' })).toHaveValue('75');
+  await page.getByRole('button', { name: 'All parts', exact: true }).click();
+  await page.getByRole('button', { name: 'Inspect Right fan', exact: true }).click();
+  await page.getByRole('button', { name: 'Perspective', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Show full assembly', exact: true })).toBeVisible();
+  await page.waitForTimeout(350);
+  const beforeDrag = await canvas.evaluate(el => (el as HTMLCanvasElement).toDataURL());
+  const bounds = await canvas.boundingBox();
+  if (!bounds) throw new Error('Inspection canvas is missing');
+  await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(bounds.x + bounds.width / 2 + 100, bounds.y + bounds.height / 2 + 40, { steps: 8 });
+  await page.mouse.up();
+  await expect.poll(() => canvas.evaluate(el => (el as HTMLCanvasElement).toDataURL())).not.toBe(beforeDrag);
+  await expect(page.locator('.inspector h2')).toHaveText('Right fan');
+  await page.getByRole('button', { name: 'Show full assembly', exact: true }).click();
+  await expect(page.locator('.inventory-item')).toHaveCount(20);
+});
