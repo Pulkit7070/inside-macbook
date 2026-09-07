@@ -1,0 +1,6 @@
+artifacts/
+node_modules/
+.git/
+docs/
+test-results/
+playwright-report/

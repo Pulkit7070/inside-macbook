@@ -64,8 +64,7 @@ if (options.resume) {
   await mkdir(framesDir, { recursive: true });
   await writeFile(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
 }
-const fallback = '/Users/psudokit/Library/Caches/ms-playwright/chromium-1234/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing';
-const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || (existsSync(fallback) ? fallback : undefined);
+const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
 const browser = await chromium.launch({ executablePath, headless: true });
 const framePath = frame => path.join(framesDir, `frame-${String(frame).padStart(5, '0')}.jpg`);
 try {

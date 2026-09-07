@@ -1,6 +1,8 @@
 # Inside a MacBook
 
-An interactive 3D study of the 14-inch MacBook Pro (2026, M5 Pro), shown in Space Black against a white studio background. Pull apart 20 original, simplified assemblies; explore five systems and eight circuit function groups; select and isolate a component; and play a 24-second in-browser walkthrough. A separate 20-second edited film presents six shots with motion graphics and an original score.
+[Live demo](https://inside-macbook.vercel.app) · [GitHub](https://github.com/Pulkit7070/inside-macbook)
+
+An interactive 3D study of the 14-inch MacBook Pro (2026, M5 Pro), shown in Space Black against a white studio background. Pull apart 20 original, simplified assemblies; explore five systems and eight circuit function groups; select and isolate a component; and play a 24-second in-browser walkthrough. A separate 20-second edited film presents six shots with motion graphics.
 
 ![The MacBook explorer in its exploded view](docs/preview.png)
 
@@ -26,6 +28,8 @@ Open http://127.0.0.1:4173. No API keys, accounts, or external model downloads a
 - Choose perspective, top, front, bottom, left, or right views. Reset restores the initial view and all components.
 - Watch the teardown plays the shared model through a deterministic 24-second timeline. The tour opens the 20-assembly tray, highlights both fans, then spends its final 12 seconds separating and explaining eight circuit function groups. It ends in the logic-board study. Exit demo or press Escape early to return to your previous exploration state.
 
+Camera presets focus the selected component at the center of the stage and keep its original materials. Use **Show full assembly** to return to the previous teardown amount. The full miniature tray remains available between inspections.
+
 ## Validate and build
 
 ```sh
@@ -36,7 +40,7 @@ npx playwright install chromium
 npm run test:browser
 ```
 
-Browser checks use a local Vite server automatically. Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to use an existing Chromium executable. Production assets are written to `dist/`; serve that directory using a static host. The project does not deploy itself.
+Browser checks use a local Vite server automatically. Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` to use an existing Chromium executable. Production assets are written to `dist/`. Vercel uses the included build configuration.
 
 ## Structure
 
@@ -52,7 +56,7 @@ Browser checks use a local Vite server automatically. Set `PLAYWRIGHT_CHROMIUM_E
 
 ## Video export
 
-The website’s **Watch the teardown** control remains a 24-second interactive tour. The separate film at `/?film=1` is a 20-second edit with six shots: chip, circuits, notebook, teardown, cooling, and closing hero. It uses animated typography, shot transitions, camera movement, and an original score.
+The website’s **Watch the teardown** control remains a 24-second interactive tour. The separate film at `/?film=1` is a 20-second edit with six shots: chip, circuits, notebook, teardown, cooling, and closing hero. It uses animated typography, shot transitions, and camera movement.
 
 Start the app on port 4173, install Chromium as above, and make `ffmpeg` and `ffprobe` available. Capture the film’s silent 1920 × 1080, 30 fps H.264 picture master:
 
@@ -61,14 +65,13 @@ node scripts/render-video.mjs --url 'http://127.0.0.1:4173/?film=1' --duration 2
 node scripts/verify-video.mjs --input artifacts/macbook-film-silent.mp4 --duration 20 --extract
 ```
 
-Generate the original soundtrack with Python and NumPy, then mix the final social video:
+The final social edit uses **Breeze by LiQWYD**, with the excerpt from 32–52 seconds mixed quietly under the picture. Download the track from its [licensed source](https://www.free-stock-music.com/liqwyd-breeze.html) and save it as `artifacts/Breeze.mp3`. Mix it with the silent master:
 
 ```sh
-python3 scripts/compose-score.py
-node scripts/render-film.mjs --mix-only
+ffmpeg -y -i artifacts/macbook-film-silent.mp4 -ss 32 -i artifacts/Breeze.mp3 -map 0:v:0 -map 1:a:0 -c:v copy -af 'loudnorm=I=-21:TP=-3:LRA=7,afade=t=in:d=0.05,afade=t=out:st=19.5:d=0.5' -c:a aac -b:a 256k -ar 48000 -t 20 -movflags +faststart artifacts/macbook-final.mp4
 ```
 
-Use `node scripts/render-film.mjs` to render fresh picture and mix it. The result is `artifacts/macbook-space-black-film.mp4`, with AAC stereo audio. The separate soundtrack is `artifacts/macbook-hiphop-score.wav`. The score contains a 15-second original hip-hop passage at 96 BPM plus transition sounds, timed to the six shots. No audio was extracted from the YouTube reference. Install NumPy in a Python environment if unavailable; the score script uses no external audio samples.
+Include the music credit in [ATTRIBUTION.md](ATTRIBUTION.md) when posting the soundtrack version. Audio and exported video remain local artifacts and are not bundled with the website.
 
 Running the renderer without these film options instead captures the 24-second website demo to `artifacts/inside-macbook-m5-pro.mp4`. The verifier checks codec, dimensions, duration, frame rate, and available frame count; `--extract` writes review frames. `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`, `FFMPEG_PATH`, and `FFPROBE_PATH` can select installed executables. Use `node scripts/render-video.mjs --help` for subset captures, resolution options, and safe resume behavior. The MP4 is generated locally rather than stored in Git. The verifier writes a JSON report alongside extracted review frames.
 
@@ -80,4 +83,3 @@ The geometry is an original educational illustration, not a service model. Dimen
 
 Original source and procedural geometry are MIT licensed. Dependencies retain their own licenses.
 
-Camera presets focus the selected component at the center of the stage and keep its original materials. Use **Show full assembly** to return to the previous teardown amount. The full miniature tray remains available between inspections.

@@ -6,7 +6,7 @@
 
 ## Hardware references
 
-This illustration targets the **2026 MacBook Pro, 14-inch, M5 Pro**, shown in Silver. Apple also offers Space Black.
+This illustration targets the **2026 MacBook Pro, 14-inch, M5 Pro**, shown in Space Black. Apple also offers Silver.
 
 Primary Apple references:
 
@@ -44,9 +44,14 @@ MacBook Pro, M5 Pro, Apple silicon, and MagSafe are Apple trademarks. This is an
 
 Additional exterior checks used the [2026 side profile](https://content.abt.com/media/images/products/BDP_Images/apple-macbook-pro-14-2026-silver-left.jpg) and a [14-inch M5 underside photograph](https://www.macotakara.jp/macintosh/entry-49753.html). The latter is the 2025 model and is used only as a visual comparison for the cover, feet, and engraving, alongside the 2026 service references. Circuit-level sources and the limits of the teaching layout are recorded in `src/data/board.ts`.
 
-## Original film soundtrack
+## Final film soundtrack
 
-The edited Space Black film uses a procedurally composed original instrumental and synthesized sound effects from `scripts/compose-score.py`. No audio from the user’s YouTube reference is included.
+Breeze by LiQWYD | https://www.liqwydmusic.com
+Royalty Free Music by https://www.free-stock-music.com
+Creative Commons CC BY 3.0 | https://creativecommons.org/licenses/by/3.0/
+Edited excerpt 32–52 seconds, volume adjusted and fades applied.
+
+[Track source and license](https://www.free-stock-music.com/liqwyd-breeze.html). The track is downloaded separately and is not covered by the source code's MIT license.
 
 ### Space Black finishing pass
 
