@@ -43,3 +43,7 @@ MacBook Pro, M5 Pro, Apple silicon, and MagSafe are Apple trademarks. This is an
 [Model X Studio](https://model-x-studio.vercel.app/) informed the floating panels, compact assembly bar, and dark studio treatment. The user-provided Human Atlas video informed the miniature component tray. No assets or code from these references are redistributed.
 
 Additional exterior checks used the [2026 side profile](https://content.abt.com/media/images/products/BDP_Images/apple-macbook-pro-14-2026-silver-left.jpg) and a [14-inch M5 underside photograph](https://www.macotakara.jp/macintosh/entry-49753.html). The latter is the 2025 model and is used only as a visual comparison for the cover, feet, and engraving, alongside the 2026 service references. Circuit-level sources and the limits of the teaching layout are recorded in `src/data/board.ts`.
+
+## Original film soundtrack
+
+The edited Space Black film uses a procedurally composed original instrumental and synthesized sound effects from `scripts/compose-score.py`. No audio from the user’s YouTube reference is included.

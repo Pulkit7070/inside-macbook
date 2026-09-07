@@ -3,7 +3,7 @@ import { RoundedBox } from '@react-three/drei';
 import * as THREE from 'three';
 
 type V3 = [number, number, number];
-const ALUMINUM = '#b4b8bb';
+const ALUMINUM = '#242729';
 export function Solid({ size, position, color = ALUMINUM, radius = 0.035, metalness = 0.65, roughness = 0.36, children }: { size: V3; position?: V3; color?: string; radius?: number; metalness?: number; roughness?: number; children?: ReactNode }) {
   return <RoundedBox args={size} radius={Math.min(radius, Math.min(...size) / 2.1)} smoothness={3} position={position} castShadow receiveShadow><meshStandardMaterial color={color} metalness={metalness} roughness={roughness} />{children}</RoundedBox>;
 }
@@ -43,7 +43,7 @@ export function TopCase() {
   return <group>
     <Plate shape={deck} depth={0.032} y={0.02} /><Plate shape={walls} tapered depth={0.185} y={0.005} />
     <Grille x={-2.96} /><Grille x={2.96} />
-    <Solid size={[0.96, 0.014, 0.085]} position={[0, 0.014, 2.185]} color="#959b9c" radius={0.006} />
+    <Solid size={[0.96, 0.014, 0.085]} position={[0, 0.014, 2.185]} color="#34393c" radius={0.006} />
     <Solid size={[5.15, 0.07, 0.13]} position={[0, -0.022, -2.14]} color="#161a19" />
     <Port side={-1} z={-1.60} width={.33} height={.073}/><Port side={-1} z={-1.10} width={.24} height={.073}/><Port side={-1} z={-.60} width={.24} height={.073}/>
     <mesh rotation={[0,0,Math.PI/2]} position={[-3.129,-.092,-.15]}><cylinderGeometry args={[.04,.04,.004,24]}/><meshStandardMaterial color="#131719"/></mesh>
@@ -55,7 +55,7 @@ export function BottomCover() {
   const outline = useMemo(() => rounded(6.15,4.31,.22), []);
   const texture = useMemo(() => { const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=256;const c=canvas.getContext('2d')!;c.font='500 84px Arial';c.fillStyle='#737a7e';c.textAlign='center';c.fillText('MacBook Pro',512,145);const t=new THREE.CanvasTexture(canvas);t.colorSpace=THREE.SRGBColorSpace;return t;}, []);
   useEffect(() => () => texture.dispose(), [texture]);
-  return <group><Plate shape={outline} depth={.012} y={.012} color="#aab0b3" />
+  return <group><Plate shape={outline} depth={.012} y={.012} color="#242729" />
     {[-2.65,2.65].flatMap(x=>[-1.71,1.71].map(z=><mesh key={`${x}${z}`} position={[x,-.007,z]}><cylinderGeometry args={[.13,.14,.014,40]} /><meshStandardMaterial color="#222729" roughness={.9} /></mesh>))}
     <mesh rotation={[Math.PI/2,0,0]} position={[0,-.001,0]}><planeGeometry args={[2.3,.575]} /><meshStandardMaterial map={texture} transparent roughness={.9} depthWrite={false} /></mesh>
     {[-2.9,-1.1,1.1,2.9].flatMap(x=>[-1.94,1.94].map(z=><group key={`${x}${z}`} position={[x,-.001,z]} rotation={[Math.PI,0,0]}><Screw position={[0,0,0]} /></group>))}
@@ -95,8 +95,8 @@ export function Keyboard() {
   </group>;
 }
 export function Trackpad() {
-  return <group><Solid size={[2.596, 0.022, 1.603]} radius={0.01} color="#9da4a7" roughness={0.47} />
-    <Solid size={[2.575, 0.003, 1.58]} position={[0, 0.013, 0]} color="#b4babe" radius={0.001} roughness={0.58} />
+  return <group><Solid size={[2.596, 0.022, 1.603]} radius={0.01} color="#24272a" roughness={0.47} />
+    <Solid size={[2.575, 0.003, 1.58]} position={[0, 0.013, 0]} color="#303438" radius={0.001} roughness={0.58} />
   </group>;
 }
 export function Display({ lid }: { lid: number }) {
@@ -114,7 +114,7 @@ export function Display({ lid }: { lid: number }) {
   }, []);
   useEffect(() => () => texture.dispose(), [texture]);
   return <group rotation={[-lid, 0, 0]}>
-    <Solid size={[6.252, 0.065, 4.20]} position={[0, 0, 2.01]} radius={0.03} color="#aeb4b8" />
+    <Solid size={[6.252, 0.065, 4.20]} position={[0, 0, 2.01]} radius={0.03} color="#25282b" />
     <Solid size={[6.19, 0.014, 4.115]} position={[0, -0.04, 2.01]} radius={0.006} color="#080b0b" metalness={0.08} />
     <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, -0.049, 2.034]}><planeGeometry args={[6.06, 3.936]} /><meshBasicMaterial map={texture} toneMapped={false} /></mesh>
     <Solid size={[0.70, 0.008, 0.19]} position={[0, -0.056, 3.925]} radius={0.003} color="#080b0b" metalness={0.1} />

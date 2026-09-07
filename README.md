@@ -1,6 +1,6 @@
 # Inside a MacBook
 
-An interactive 3D study of the 14-inch MacBook Pro (2026, M5 Pro). Pull apart 20 original, simplified assemblies; explore five systems and eight circuit function groups; select and isolate a component; and play a 24-second cinematic walkthrough.
+An interactive 3D study of the 14-inch MacBook Pro (2026, M5 Pro), shown in Space Black against a white studio background. Pull apart 20 original, simplified assemblies; explore five systems and eight circuit function groups; select and isolate a component; and play a 24-second in-browser walkthrough. A separate 20-second edited film presents six shots with motion graphics and an original score.
 
 ![The MacBook explorer in its exploded view](docs/preview.png)
 
@@ -46,19 +46,31 @@ Browser checks use a local Vite server automatically. Set `PLAYWRIGHT_CHROMIUM_E
 - `src/scene/geometry.tsx`: original procedural meshes and textures.
 - `src/scene/MacBook.tsx`: assembly transforms and picking.
 - `src/scene/Scene.tsx`: lighting, camera controls, and rendering.
-- `src/scene/timeline.ts`: reusable cinematic timeline.
+- `src/scene/timeline.ts`: the 24-second interactive demo timeline.
+- `src/film/Film.tsx` and `src/film/film.css`: the separate 20-second, six-shot film and motion graphics.
 - `src/App.tsx` and `src/styles.css`: responsive HTML interface.
 
 ## Video export
 
-The export scripts capture the same deterministic 24-second timeline used by the website and encode a silent 1920 × 1080, 30 fps H.264 MP4. Start the app on port 4173, install Chromium as above, and make `ffmpeg` and `ffprobe` available:
+The website’s **Watch the teardown** control remains a 24-second interactive tour. The separate film at `/?film=1` is a 20-second edit with six shots: chip, circuits, notebook, teardown, cooling, and closing hero. It uses animated typography, shot transitions, camera movement, and an original score.
+
+Start the app on port 4173, install Chromium as above, and make `ffmpeg` and `ffprobe` available. Capture the film’s silent 1920 × 1080, 30 fps H.264 picture master:
 
 ```sh
-node scripts/render-video.mjs
-node scripts/verify-video.mjs --extract
+node scripts/render-video.mjs --url 'http://127.0.0.1:4173/?film=1' --duration 20 --output artifacts/macbook-film-silent.mp4
+node scripts/verify-video.mjs --input artifacts/macbook-film-silent.mp4 --duration 20 --extract
 ```
 
-The default output is `artifacts/inside-macbook-m5-pro.mp4`. The verifier checks codec, dimensions, duration, frame rate, and available frame count; `--extract` writes review frames. `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`, `FFMPEG_PATH`, and `FFPROBE_PATH` can select installed executables. Use `node scripts/render-video.mjs --help` for subset captures, resolution options, and safe resume behavior. The MP4 is generated locally rather than stored in Git. The verifier writes a JSON report alongside extracted review frames.
+Generate the original soundtrack with Python and NumPy, then mix the final social video:
+
+```sh
+python3 scripts/compose-score.py
+node scripts/render-film.mjs --mix-only
+```
+
+Use `node scripts/render-film.mjs` to render fresh picture and mix it. The result is `artifacts/macbook-space-black-film.mp4`, with AAC stereo audio. The score contains a 15-second original electronic passage at 128 BPM plus transition sounds, timed to the six shots. No audio was extracted from the YouTube reference. Install NumPy in a Python environment if unavailable; the score script uses no external audio samples.
+
+Running the renderer without these film options instead captures the 24-second website demo to `artifacts/inside-macbook-m5-pro.mp4`. The verifier checks codec, dimensions, duration, frame rate, and available frame count; `--extract` writes review frames. `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`, `FFMPEG_PATH`, and `FFPROBE_PATH` can select installed executables. Use `node scripts/render-video.mjs --help` for subset captures, resolution options, and safe resume behavior. The MP4 is generated locally rather than stored in Git. The verifier writes a JSON report alongside extracted review frames.
 
 ## Reference and accuracy
 

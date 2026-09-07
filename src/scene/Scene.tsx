@@ -80,7 +80,7 @@ export default function Scene({ state, onSelect, view, resetKey, reducedMotion, 
         <Lightformer form="rect" intensity={2} position={[7, 4, 2]} rotation={[0, -Math.PI / 2, 0]} scale={[5, 9, 1]} />
       </Environment>
       <MacBook state={state} onSelect={onSelect} reducedMotion={reducedMotion} lid={lid} />
-      {state.explosion < .98 && <ContactShadows position={[0, -1.15, 0]} opacity={0.28} scale={17} blur={2.6} far={8} resolution={256} color="#464b41" />}
+      {state.explosion < .65 && <ContactShadows position={[0, -1.15, 0]} opacity={0.28} scale={17} blur={2.6} far={8} resolution={256} color="#464b41" />}
     </Suspense>
     <CameraRig view={view} resetKey={resetKey} isolatedId={state.isolatedId} explosion={state.explosion} demoAngle={demoAngle} reducedMotion={reducedMotion} zoom={zoom} />
   </Canvas></CanvasBoundary>;

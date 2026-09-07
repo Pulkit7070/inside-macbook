@@ -6,6 +6,9 @@ test('teardown, component selection, isolation, filters, and reset', async ({ pa
   await page.goto('/');
   await expect(page.locator('canvas')).toBeVisible();
   await expect(page.locator('.part-row')).toHaveCount(20);
+  await expect(page.locator('.app')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+  await page.getByRole('button', { name: 'Top case', exact: true }).click();
+  await expect(page.locator('.inspector')).toContainText('Shown in Space Black');
   await page.getByRole('button', { name: 'All parts', exact: true }).click();
   await expect(page.getByRole('slider', { name: 'Explode assembly' })).toHaveValue('100');
   await page.getByRole('textbox', { name: 'Find a component' }).fill('fan');

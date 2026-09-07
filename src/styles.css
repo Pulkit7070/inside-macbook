@@ -1710,3 +1710,38 @@ input[type=range]:disabled {
  .board-mode.demo-mode .scene-wrap {inset:10px 10px 290px;}
  .board-mode.demo-mode .board-details {bottom:110px;height:165px;}
 }
+
+/* White studio, requested presentation. */
+:root {--studio:#fff;--paper:#fff;--ink:#202824;--muted:#69746e;--line:#dfe5e1;--accent:#506e61;color:#202824;background:#fff;}
+.app {background:#fff;color:#202824;}
+.header {background:transparent;}
+.brand-icon,.demo-button {background:#263d32;color:#fff;}
+.brand-period {color:#688573;}
+.breadcrumb,.about-button,.eyebrow,.viewer-heading p,.section-label,.sidebar-heading p,.system-count,.sidebar-foot,.intro-description,.part-description,.part-detail,.part-location,.material-info p,.selection-note,.inspector-footer p,.footer,.orbit-hint,.model-note {color:#67766c;}
+.viewer-heading h1,.sidebar-heading h2,.inspector h2 {color:#202824;}
+.live-label {color:#677a6d;}.live-label span {background:#749980;box-shadow:none;}
+.sidebar,.inspector.has-selection,.board-details,.board-mode.demo-mode .board-details {background:#ffffffed;border-color:#dfe6e1;box-shadow:0 12px 45px #213d2d09;color:#29352d;}
+.system-row,.part-row {color:#57645c;}
+.system-row:hover,.part-row:hover,.part-row.selected {background:#eaf0eb;color:#254431;}
+.part-row.selected .part-indicator {background:#5d8468;}
+.visibility-check,.count-pill,.search-field,.search-field kbd {background:#f7f9f7;color:#6a7b70;border-color:#dbe3dc;}
+.search-field input {color:#25372c;}.search-field input::placeholder {color:#849187;}
+.sidebar-foot {background:#fff;}
+.part-pin {background:#fff;color:#385343;border-color:#d3ddd4;}
+.component-symbol {background:radial-gradient(ellipse,#eef3ef,#fff);border-color:#e2e8e3;}
+.isolate-button,.suggested-part {background:#2c4536;color:#fff;}.isolate-button:hover {background:#41614b;color:#fff!important;}
+.system-tag,.selection-note,.inspector-footer button {color:#6b7d6f;}
+.inventory-item {color:#526157;}.inventory-item span {text-shadow:none;}.inventory-item:hover,.inventory-item.active {border-color:#9cb19f;background:#64886a09;color:#244d31;}
+.viewport-actions,.view-switch {background:#fffffff0;border-color:#dde5de;box-shadow:0 5px 20px #1c3d2908;}
+.view-switch button,.viewport-actions button {color:#6c7d70;}.view-switch button.active {background:#e8efe9;color:#24402e;}
+.teardown-controls {background:#fffffff2;border-color:#dfe6e0;box-shadow:0 12px 40px #1f412d0b;}
+.teardown-label h2,.explosion-value,.slider-endpoints button,.reset-button {color:#4c6254;}
+.slider-icon {border-color:#d7e1d9;}.slider-ticks i {background:#bbcabc;}
+.slider-control input::-webkit-slider-runnable-track {background:linear-gradient(to right,#65846d var(--progress),#d5dfd7 var(--progress));}
+.slider-control input::-webkit-slider-thumb {background:#64886e;border-color:white;box-shadow:0 0 0 1px #64886e;}
+.slider-control input::-moz-range-thumb {background:#64886e;border-color:white;box-shadow:0 0 0 1px #64886e;}
+.demo-caption h2 {color:#293a2e;}.demo-timer {color:#7a8c7e;}.demo-progress {background:#dce5de;}.demo-progress i {background:#65846e;}
+.about-dialog {background:#fff;color:#26382c;border-color:#dae3dc;}.about-dialog p,.about-sources {color:#65776a;}
+.board-entry {background:#fff;color:#466251;border-color:#cedbd1;}
+.board-details p {color:#5a6d60;}.board-details a {color:#3e6b4b;}.board-details small {color:#819187;}
+@media(max-width:900px) {.sidebar,.sidebar.mobile-open,.inspector.has-selection,.mobile-parts-button,.teardown-controls {background:#fffffff5;color:#374b3e;border-color:#dbe4dc;}.mobile-backdrop{background:#30453922;}}
