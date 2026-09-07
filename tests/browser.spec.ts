@@ -6,7 +6,7 @@ test('teardown, component selection, isolation, filters, and reset', async ({ pa
   await page.goto('/');
   await expect(page.locator('canvas')).toBeVisible();
   await expect(page.locator('.part-row')).toHaveCount(20);
-  await page.getByRole('button', { name: 'Exploded', exact: true }).click();
+  await page.getByRole('button', { name: 'All parts', exact: true }).click();
   await expect(page.getByRole('slider', { name: 'Explode assembly' })).toHaveValue('100');
   await page.getByRole('textbox', { name: 'Find a component' }).fill('fan');
   await expect(page.locator('.part-row')).toHaveCount(2);
@@ -70,9 +70,9 @@ test('phone parts panel, inspection, about dialog, and layout', async ({ page })
   await page.goto('/');
   await expect(page.locator('canvas')).toBeVisible();
   await page.getByRole('button', { name: 'Parts & systems' }).click();
-  await page.getByRole('textbox', { name: 'Find a component' }).fill('processor');
-  await page.getByRole('button', { name: 'Processor', exact: true }).click();
-  await expect(page.locator('.inspector h2')).toHaveText('Processor');
+  await page.getByRole('textbox', { name: 'Find a component' }).fill('M5 Pro');
+  await page.getByRole('button', { name: 'M5 Pro', exact: true }).click();
+  await expect(page.locator('.inspector h2')).toHaveText('M5 Pro');
   await expect(page.locator('.sidebar')).not.toBeVisible();
   await page.getByRole('button', { name: 'Isolate component' }).click();
   await expect(page.getByRole('button', { name: 'Show full assembly' })).toBeVisible();
@@ -80,7 +80,7 @@ test('phone parts panel, inspection, about dialog, and layout', async ({ page })
   await page.getByRole('button', { name: /Watch the teardown/ }).click();
   await expect(page.locator('.inspector')).not.toBeVisible();
   await page.getByRole('button', { name: /Exit demo/ }).click();
-  await expect(page.locator('.inspector h2')).toHaveText('Processor');
+  await expect(page.locator('.inspector h2')).toHaveText('M5 Pro');
   await page.getByRole('button', { name: 'Close component details' }).click();
   await page.getByRole('button', { name: 'About this project' }).click();
   await expect(page.locator('dialog')).toBeVisible();
@@ -97,3 +97,27 @@ test('a failed scene download leaves the component explorer usable', async ({ pa
   await expect(page.locator('.inspector h2')).toHaveText('Logic board');
   await expect(page.locator('.part-row')).toHaveCount(20);
 });
+
+for (const viewport of [{ width: 1440, height: 960 }, { width: 390, height: 844 }]) {
+  test(`all 20 inventory controls stay visible while inspecting both fans at ${viewport.width}px`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto('/');
+    await page.getByRole('button', { name: 'All parts', exact: true }).click();
+    const inventory = page.locator('.inventory-item');
+    const assertInventoryVisible = async () => {
+      await expect(inventory).toHaveCount(20);
+      for (const item of await inventory.all()) {
+        await expect(item).toBeVisible();
+        await expect(item).toBeInViewport({ ratio: 1 });
+      }
+      await expect(page.getByRole('slider', { name: 'Explode assembly' })).toHaveValue('100');
+    };
+    await assertInventoryVisible();
+    for (const name of ['Left fan', 'Right fan']) {
+      await page.getByRole('button', { name: `Inspect ${name}`, exact: true }).click();
+      await expect(page.locator('.inspector h2')).toHaveText(name);
+      await expect(page.getByRole('button', { name: `Inspect ${name}`, exact: true })).toHaveClass(/active/);
+      await assertInventoryVisible();
+    }
+  });
+}

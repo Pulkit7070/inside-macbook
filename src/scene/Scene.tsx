@@ -39,6 +39,13 @@ function CameraRig({ view, resetKey, isolatedId, explosion, demoAngle, reducedMo
   }, [view, resetKey, isolatedId, explosion, size.width, zoom, isDemo, invalidate]);
   useFrame((frame, dt) => {
     if (!controls.current) return;
+    if (explosion > .65 && !isolatedId) {
+      const blend = THREE.MathUtils.smoothstep(explosion, .65, 1);
+      const d = (size.width < 550 ? 18.2 : 14.7) + .65 * 2.8;
+      const angle = demoAngle ?? .62;
+      camera.position.set(Math.sin(angle)*d, 8.16, Math.cos(angle)*d).lerp(new THREE.Vector3(0,0,5/Math.tan(THREE.MathUtils.degToRad(18))), blend);
+      controls.current.target.set(0,1.62,-.1).multiplyScalar(1-blend); controls.current.update(); return;
+    }
     if (demoAngle !== undefined) {
       const d = (size.width < 550 ? 18.2 : 14.7) + explosion * 2.8;
       camera.position.set(Math.sin(demoAngle) * d, 6.8 + explosion * 2.1, Math.cos(demoAngle) * d);
@@ -50,7 +57,7 @@ function CameraRig({ view, resetKey, isolatedId, explosion, demoAngle, reducedMo
     if (camera.position.distanceTo(destination.current) < 0.01) active.current = false;
     else frame.invalidate();
   });
-  return <OrbitControls ref={controls} makeDefault enabled={demoAngle === undefined} enablePan={false} minDistance={2.5} maxDistance={50}
+  return <OrbitControls ref={controls} makeDefault enabled={demoAngle === undefined && explosion < .98} enablePan={false} minDistance={2.5} maxDistance={50}
     minPolarAngle={0} maxPolarAngle={Math.PI / 2 + 0.17} enableDamping={!reducedMotion} dampingFactor={0.09}
     onStart={() => { active.current = false; }} />;
 }
@@ -71,7 +78,7 @@ export default function Scene({ state, onSelect, view, resetKey, reducedMotion, 
         <Lightformer form="rect" intensity={2} position={[7, 4, 2]} rotation={[0, -Math.PI / 2, 0]} scale={[5, 9, 1]} />
       </Environment>
       <MacBook state={state} onSelect={onSelect} reducedMotion={reducedMotion} lid={lid} />
-      <ContactShadows position={[0, -1.15, 0]} opacity={0.28} scale={17} blur={2.6} far={8} resolution={256} color="#464b41" />
+      {state.explosion < .98 && <ContactShadows position={[0, -1.15, 0]} opacity={0.28} scale={17} blur={2.6} far={8} resolution={256} color="#464b41" />}
     </Suspense>
     <CameraRig view={view} resetKey={resetKey} isolatedId={state.isolatedId} explosion={state.explosion} demoAngle={demoAngle} reducedMotion={reducedMotion} zoom={zoom} />
   </Canvas></CanvasBoundary>;

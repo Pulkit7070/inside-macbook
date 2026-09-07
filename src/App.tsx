@@ -1,3 +1,4 @@
+import { flushSync } from 'react-dom';
 import { Component, lazy, Suspense, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react';
 import { ArrowDownLeft, ArrowRight, ArrowUpRight, Box, Check, ChevronDown, ChevronLeft, CircleHelp, Cpu, Eye, Focus, Layers3, Maximize2, Minus, MousePointer2, MoveUpRight, Pause, Play, Plus, RotateCcw, Search, SlidersHorizontal, X } from 'lucide-react';
 import { getPart, parts, systems } from './data/parts';
@@ -5,6 +6,8 @@ import { initialState, reducer, visibleParts } from './state/explorer';
 import { DEMO_DURATION, sampleTimeline } from './scene/timeline';
 import type { View } from './scene/Scene';
 
+declare global { interface Window { __atlasRenderFrame?: (seconds: number) => Promise<void> } }
+const renderMode = new URLSearchParams(window.location.search).has('render');
 const Scene = lazy(() => import('./scene/Scene'));
 
 class SceneBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
@@ -23,7 +26,7 @@ export default function App() {
   const [zoom, setZoom] = useState(1);
   const [focusMode, setFocusMode] = useState(false);
   const [mobileParts, setMobileParts] = useState(false);
-  const [demo, setDemo] = useState(false);
+  const [demo, setDemo] = useState(renderMode);
   const [demoTime, setDemoTime] = useState(0);
   const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const about = useRef<HTMLDialogElement>(null);
@@ -36,11 +39,11 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!demo) return;
+    if (!demo || renderMode) return;
     let frame = 0; const start = performance.now();
     const tick = (now: number) => {
       const t = (now - start) / 1000;
-      if (t >= DEMO_DURATION) { setDemo(false); setDemoTime(0); return; }
+      if (t >= DEMO_DURATION) { setDemo(false); setDemoTime(24); dispatch({type:'explosion', value:1}); return; }
       setDemoTime(t); frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick); return () => cancelAnimationFrame(frame);
@@ -56,11 +59,18 @@ export default function App() {
     window.addEventListener('keydown', key); return () => window.removeEventListener('keydown', key);
   }, []);
 
+  useEffect(() => {
+    window.__atlasRenderFrame = async seconds => {
+      flushSync(() => { setDemo(true); setDemoTime(seconds); });
+      await new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    };
+    return () => { delete window.__atlasRenderFrame; };
+  }, []);
   const timeline = useMemo(() => sampleTimeline(demoTime), [demoTime]);
   const renderedState = demo ? { ...initialState, enabledSystems: [...initialState.enabledSystems], explosion: timeline.explosion, selectedId: timeline.selectedId } : state;
   const visible = visibleParts(state);
-  const results = visible.filter(part => `${part.name} ${part.system}`.toLowerCase().includes(query.trim().toLowerCase()));
-  const selected = state.selectedId ? getPart(state.selectedId) : undefined;
+  const results = visible.filter(part => `${part.name} ${part.system} ${part.id}`.toLowerCase().includes(query.trim().toLowerCase()));
+  const selected = renderedState.selectedId ? getPart(renderedState.selectedId) : undefined;
   const selectedSystem = systems.find(system => system.id === selected?.system);
   const percent = Math.round(renderedState.explosion * 100);
 
@@ -73,12 +83,12 @@ export default function App() {
   };
   const startDemo = () => { setDemoTime(0); setMobileParts(false); setDemo(true); };
 
-  return <div className={`app ${focusMode ? 'focus-mode' : ''} ${demo ? 'demo-mode' : ''}`}>
+  return <div className={`app ${focusMode ? 'focus-mode' : ''} ${demo ? 'demo-mode' : ''} ${renderMode ? 'render-mode' : ''} ${renderedState.explosion >= .98 && !renderedState.isolatedId ? 'inventory-mode' : ''}`}>
     <header className="header">
       <a className="brand" href="/" aria-label="Inside a MacBook home"><span className="brand-icon"><Layers3 size={21} strokeWidth={1.65} /></span><span>inside<span className="brand-period">.</span></span></a>
       <div className="breadcrumb"><span>AN OBJECT EXPLORER</span><i /><span>MACBOOK PRO</span></div>
       <div className="header-actions"><button className="about-button" aria-label="About this project" onClick={() => about.current?.showModal()}><CircleHelp size={16} /><span>About this project</span></button>
-        <button className={`demo-button ${demo ? 'playing' : ''}`} onClick={demo ? () => setDemo(false) : startDemo}>{demo ? <Pause size={13} fill="currentColor" /> : <Play size={13} fill="currentColor" />}{demo ? 'Exit demo' : 'Watch the teardown'}<span className="demo-duration">45s</span></button>
+        <button className={`demo-button ${demo ? 'playing' : ''}`} onClick={demo ? () => setDemo(false) : startDemo}>{demo ? <Pause size={13} fill="currentColor" /> : <Play size={13} fill="currentColor" />}{demo ? 'Exit demo' : 'Watch the teardown'}<span className="demo-duration">24s</span></button>
       </div>
     </header>
 
@@ -105,13 +115,14 @@ export default function App() {
       </aside>
 
       <section className="viewer" aria-label="MacBook explorer">
-        <div className="viewer-heading"><div><div className="eyebrow">ENGINEERED, LAYER BY LAYER</div><h1>MacBook Pro</h1><p>14-inch <span>/</span> 2021 <span>/</span> M1 Pro</p></div><div className="live-label"><span />INTERACTIVE 3D</div></div>
+        <div className="viewer-heading"><div><div className="eyebrow">ENGINEERED, LAYER BY LAYER</div><h1>MacBook Pro</h1><p>14-inch <span>/</span> 2026 <span>/</span> M5 Pro</p></div><div className="live-label"><span />INTERACTIVE 3D</div></div>
         <div className="scene-wrap">
           <div className="datum datum-left"><span>+</span></div><div className="datum datum-right"><span>+</span></div>
           <SceneBoundary><Suspense fallback={<div className="loading-view"><Layers3 size={28} /><span>Preparing the assembly</span><i /></div>}>
-            <Scene state={renderedState} view={view} resetKey={resetKey} onSelect={id => { if (!demo) select(id); }} reducedMotion={reducedMotion}
+            <Scene state={renderedState} view={view} resetKey={resetKey} onSelect={id => { if (!demo) select(id); }} reducedMotion={reducedMotion || renderMode}
               lid={demo ? timeline.lid : undefined} demoAngle={demo ? timeline.angle : undefined} zoom={zoom} />
           </Suspense></SceneBoundary>
+          {renderedState.explosion >= .98 && !renderedState.isolatedId && <div className="inventory-labels" aria-label="Component tray">{parts.map(part => <button disabled={!renderedState.enabledSystems.includes(part.system)} key={part.id} className={`inventory-item ${selected?.id === part.id ? 'active' : ''}`} onClick={() => { if (!demo) select(part.id); }} aria-label={`Inspect ${part.name}`}><span>{part.name}</span></button>)}</div>}
           {!visible.length && !demo && <div className="scene-empty"><Eye size={24} /><p>Nothing in view</p><button onClick={reset}>Show all components <ArrowRight size={14} /></button></div>}
         </div>
         {!demo && <>
@@ -122,15 +133,15 @@ export default function App() {
           <div className="orbit-hint"><MousePointer2 size={12} /><span>Drag to rotate</span><i /><span>Scroll to zoom</span></div>
           <div className="model-note">ILLUSTRATIVE MODEL <span>·</span> NOT TO SCALE</div>
         </>}
-        {demo && <div className="demo-caption"><span className="eyebrow">INSIDE A MACBOOK</span><h2>{timeline.caption}</h2><div className="demo-progress"><i style={{ width: `${demoTime / DEMO_DURATION * 100}%` }} /></div><span className="demo-timer">{String(Math.floor(demoTime)).padStart(2, '0')} / 45 SEC</span></div>}
+        {demo && <div className="demo-caption"><span className="eyebrow">INSIDE A MACBOOK</span><h2>{timeline.caption}</h2><div className="demo-progress"><i style={{ width: `${demoTime / DEMO_DURATION * 100}%` }} /></div><span className="demo-timer">{String(Math.floor(demoTime)).padStart(2, '0')} / 24 SEC</span></div>}
       </section>
 
       <aside className={`inspector ${selected ? 'has-selection' : ''}`} aria-label="Component details" aria-live="polite">
         {selected ? <>
           <div className="inspector-top"><span className="section-label">COMPONENT DETAILS</span><button aria-label="Close component details" onClick={() => { dispatch({ type: 'clear-isolation' }); dispatch({ type: 'select', id: null }); }}><X size={15} /></button></div>
-          <div className="component-symbol"><Box size={42} strokeWidth={1} /><span className="symbol-corner">+</span></div>
+          <div className="component-symbol">{state.explosion >= .98 ? <Suspense fallback={null}><Scene state={{...initialState,selectedId:selected.id,isolatedId:selected.id}} onSelect={() => {}} view="perspective" resetKey={0} reducedMotion={true} zoom={1.6} /></Suspense> : <><Box size={42} strokeWidth={1} /><span className="symbol-corner">+</span></>}</div>
           <div className="system-tag"><span style={{ background: selectedSystem?.color }} />{selectedSystem?.label}</div>
-          <h2>{selected.name}</h2><p className="part-description">{selected.description}</p><p className="part-detail">{selected.detail}</p>
+          <h2>{selected.name}</h2><p className="part-description">{selected.description}</p><p className="part-detail">{selected.detail}</p><p className="part-location"><b>POSITION</b><br />{selected.location}</p>
           <div className="material-info"><span className="section-label">MATERIAL / ASSEMBLY</span><p>{selected.material}</p></div>
           <button className="isolate-button" onClick={() => dispatch({ type: state.isolatedId ? 'clear-isolation' : 'isolate' })}>{state.isolatedId ? <Layers3 size={15} /> : <Focus size={15} />}{state.isolatedId ? 'Show full assembly' : 'Isolate component'}<ArrowUpRight size={14} /></button>
           <div className="selection-note">{state.isolatedId ? 'Only this component is visible.' : 'Selected in the 3D view.'}</div>
@@ -142,12 +153,12 @@ export default function App() {
           <div className="instruction"><span className="instruction-icon"><MousePointer2 size={16} /></span><div><strong>Pick something curious</strong><p>Click any part to look closer.</p></div></div>
           <button className="suggested-part" onClick={() => select('logic-board', true)}><Cpu size={17} /><span>Start with the logic board</span><ArrowUpRight size={14} /></button>
         </>}
-        <div className="inspector-footer"><span>THE REFERENCE</span><p>MacBook Pro, 14-inch (2021)</p><button onClick={() => about.current?.showModal()}>Sources & project notes<ArrowUpRight size={12} /></button></div>
+        <div className="inspector-footer"><span>THE REFERENCE</span><p>MacBook Pro, 14-inch (2026)</p><button onClick={() => about.current?.showModal()}>Sources & project notes<ArrowUpRight size={12} /></button></div>
       </aside>
 
       <section className="teardown-controls" aria-label="Teardown controls">
         <div className="teardown-label"><span className="slider-icon"><Layers3 size={19} strokeWidth={1.5} /></span><div><h2>Take it apart</h2><p>One layer at a time.</p></div></div>
-        <div className="slider-control"><div className="slider-endpoints"><button disabled={demo || !!state.isolatedId} onClick={() => dispatch({ type: 'explosion', value: 0 })}>Assembled</button><span className="explosion-value">{percent}<span>%</span></span><button disabled={demo || !!state.isolatedId} onClick={() => dispatch({ type: 'explosion', value: 1 })}>Exploded <MoveUpRight size={11} /></button></div>
+        <div className="slider-control"><div className="slider-endpoints"><button disabled={demo || !!state.isolatedId} onClick={() => dispatch({ type: 'explosion', value: 0 })}>Assembled</button><span className="explosion-value">{percent}<span>%</span></span><button disabled={demo || !!state.isolatedId} onClick={() => dispatch({ type: 'explosion', value: 1 })}>All parts <MoveUpRight size={11} /></button></div>
           <input type="range" min="0" max="100" step="1" value={percent} disabled={demo || !!state.isolatedId} onChange={e => dispatch({ type: 'explosion', value: Number(e.target.value) / 100 })} aria-label="Explode assembly" aria-valuetext={`${percent}% exploded`} style={{ '--progress': `${percent}%` } as React.CSSProperties} />
           <div className="slider-ticks" aria-hidden="true">{Array.from({ length: 21 }, (_, i) => <i key={i} />)}</div>
         </div>
@@ -158,10 +169,10 @@ export default function App() {
 
     <dialog ref={about} className="about-dialog" onClick={e => { if (e.target === about.current) about.current.close(); }}>
       <div className="dialog-heading"><span className="eyebrow">ABOUT INSIDE.</span><button aria-label="Close about" onClick={() => about.current?.close()}><X size={20} /></button></div>
-      <h2>Understanding starts<br />with looking closer.</h2><p>An interactive study of the engineering inside a 14-inch MacBook Pro from 2021. Explore 20 simplified assemblies across five systems.</p>
+      <h2>Understanding starts<br />with looking closer.</h2><p>An interactive study of the engineering inside a 14-inch MacBook Pro from 2026. Explore 20 simplified assemblies across five systems.</p>
       <p>The geometry is an original educational illustration. Component placement, dimensions, and separation are simplified; this is not a repair guide or a mechanically accurate teardown sequence.</p>
-      <div className="about-sources"><a href="https://www.ifixit.com/News/54122/macbook-pro-2021-teardown" target="_blank" rel="noreferrer">Teardown reference · iFixit<ArrowUpRight size={15} /></a><a href="https://github.com/ashemag/human-atlas" target="_blank" rel="noreferrer">Interaction inspiration · Human Atlas<ArrowUpRight size={15} /></a></div>
-      <p className="about-small">Independent project. MacBook Pro, M1 Pro, and MagSafe are Apple trademarks. This project is not affiliated with Apple.</p>
+      <div className="about-sources"><a href="https://support.apple.com/en-us/125815" target="_blank" rel="noreferrer">2026 service reference · Apple<ArrowUpRight size={15} /></a><a href="https://github.com/ashemag/human-atlas" target="_blank" rel="noreferrer">Interaction inspiration · Human Atlas<ArrowUpRight size={15} /></a></div>
+      <p className="about-small">Independent project. MacBook Pro, M5 Pro, and MagSafe are Apple trademarks. This project is not affiliated with Apple.</p>
       <button className="isolate-button" onClick={() => about.current?.close()}>Back to exploring<ArrowRight size={16} /></button>
     </dialog>
   </div>;

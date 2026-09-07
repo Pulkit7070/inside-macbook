@@ -6,10 +6,25 @@
 
 ## Hardware references
 
-- [iFixit: 2021 MacBook Pro teardown](https://www.ifixit.com/News/54122/macbook-pro-2021-teardown).
-- [iFixit: MacBook Pro 14-inch 2021 chip identification](https://www.ifixit.com/Guide/MacBook+Pro+14-Inch+2021+Chip+ID/145718).
+This illustration targets the **2026 MacBook Pro, 14-inch, M5 Pro**, shown in Silver. Apple also offers Space Black.
 
-These are research references. No iFixit photographs, diagrams, or 3D assets are bundled or redistributed. Original geometry is schematic and does not reproduce a dimensionally accurate service assembly.
+Primary Apple references:
+
+- [Technical specifications](https://support.apple.com/en-us/126318): model identity, exterior dimensions, finishes, keyboard, ports, and the 72.4 Wh battery capacity.
+- [Repair manual](https://support.apple.com/en-us/125819): component terminology and assembly context.
+- [Exploded view and orderable parts](https://support.apple.com/en-us/125815): internal arrangement and left/right fan identification (left 923-14193; right 923-14192).
+- [Fans](https://support.apple.com/en-us/125807): rear fan placement and housing references.
+- [Logic board](https://support.apple.com/en-us/125802): board shape, cooling layout, and connector relationships.
+
+### Orientation and simplification
+
+Left and right always refer to a seated person facing the keyboard, with the display hinges at the rear. Apple's underside service photos are viewed from the opposite side of the base: viewer-left in those images corresponds to the seated user's right. This distinction matters for the two rear fans and the asymmetric ports.
+
+Proportions and layout are reference-based; all geometry is original and simplified. The 31.26 × 22.12 × 1.55 cm dimensions describe the whole closed notebook, not the base alone. This is not CAD-accurate geometry, a complete parts inventory, or a repair/disassembly guide.
+
+The three battery groups illustrate a single six-cell assembly with 72.4 Wh total capacity. The soldered M5 Pro package is separated only to explain its role. The right I/O group combines connections for teaching: HDMI and SDXC are on the logic board, not one removable daughterboard. Small cables, fasteners, shields, and other details are simplified or omitted; exploded spacing is illustrative.
+
+Apple images are research references only. Locally stored reference images remain in ignored research artifacts and are not bundled or redistributed with the application. No Apple photographs, diagrams, or 3D assets are used as application assets.
 
 ## Original assets
 
@@ -21,4 +36,4 @@ React, Three.js, React Three Fiber, Drei, Lucide, and other package dependencies
 
 ## Trademarks
 
-MacBook Pro, M1 Pro, Apple silicon, and MagSafe are Apple trademarks. This is an independent educational project and is not affiliated with or endorsed by Apple.
+MacBook Pro, M5 Pro, Apple silicon, and MagSafe are Apple trademarks. This is an independent educational project and is not affiliated with or endorsed by Apple.
