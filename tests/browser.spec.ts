@@ -31,6 +31,15 @@ test('teardown, component selection, isolation, filters, and reset', async ({ pa
 });
 
 test('camera controls, dragging, and demo return to an interactive view', async ({ page }) => {
+  await page.addInitScript(() => {
+    const original = WebGL2RenderingContext.prototype.drawElements;
+    const metrics = window as unknown as { atlasDrawCalls: number };
+    metrics.atlasDrawCalls = 0;
+    WebGL2RenderingContext.prototype.drawElements = function (...args) {
+      metrics.atlasDrawCalls++;
+      return original.apply(this, args);
+    };
+  });
   await page.goto('/');
   await expect(page.locator('canvas')).toBeVisible();
   const bounds = await page.locator('canvas').boundingBox();
@@ -42,6 +51,12 @@ test('camera controls, dragging, and demo return to an interactive view', async 
   await expect(page.locator('.part-row.selected')).toHaveCount(0);
   await page.getByRole('button', { name: 'Top', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Top', exact: true })).toHaveAttribute('aria-pressed', 'true');
+  // Presets must settle: a camera target outside OrbitControls limits used
+  // to request frames forever, saturating software-rendered CI browsers.
+  await page.waitForTimeout(1000);
+  const callsAtRest = await page.evaluate(() => (window as unknown as { atlasDrawCalls: number }).atlasDrawCalls);
+  await page.waitForTimeout(500);
+  expect(await page.evaluate(() => (window as unknown as { atlasDrawCalls: number }).atlasDrawCalls)).toBe(callsAtRest);
   await page.getByRole('button', { name: 'Zoom in', exact: true }).click();
   await page.getByRole('button', { name: /Watch the teardown/ }).click();
   await expect(page.locator('.demo-caption')).toBeVisible();

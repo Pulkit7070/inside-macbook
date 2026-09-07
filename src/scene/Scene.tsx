@@ -50,8 +50,8 @@ function CameraRig({ view, resetKey, isolatedId, explosion, demoAngle, reducedMo
     if (camera.position.distanceTo(destination.current) < 0.01) active.current = false;
     else frame.invalidate();
   });
-  return <OrbitControls ref={controls} makeDefault enabled={demoAngle === undefined} enablePan={false} minDistance={2.5} maxDistance={30}
-    minPolarAngle={0.01} maxPolarAngle={Math.PI / 2 + 0.17} enableDamping={!reducedMotion} dampingFactor={0.09}
+  return <OrbitControls ref={controls} makeDefault enabled={demoAngle === undefined} enablePan={false} minDistance={2.5} maxDistance={50}
+    minPolarAngle={0} maxPolarAngle={Math.PI / 2 + 0.17} enableDamping={!reducedMotion} dampingFactor={0.09}
     onStart={() => { active.current = false; }} />;
 }
 
