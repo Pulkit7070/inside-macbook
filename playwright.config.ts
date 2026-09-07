@@ -2,7 +2,9 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests',
-  timeout: 60_000,
+  // Hosted Linux runners render this 3D scene in software; allow the full
+  // multi-interaction scenario to finish without relaxing its assertions.
+  timeout: process.env.CI ? 180_000 : 60_000,
   workers: 1,
   expect: { timeout: 20_000 },
   use: {
