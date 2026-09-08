@@ -189,13 +189,13 @@ export default function App() {
         <button className="reset-button" onClick={reset}><RotateCcw size={15} />Reset view</button>
       </section>
     </main>
-    <footer className="footer"><span>COMPLEX THINGS. A LITTLE CLEARER.</span><span>Explore slowly. Stay curious.<span className="footer-mark">✳</span></span></footer>
+    <footer className="footer"><span>COMPLEX THINGS. A LITTLE CLEARER.</span><a className="creator-link" href="https://x.com/PsudoKit" target="_blank" rel="noopener noreferrer">Follow @PsudoKit on X<ArrowUpRight size={13} aria-hidden="true" /></a></footer>
 
     <dialog ref={about} className="about-dialog" onClick={e => { if (e.target === about.current) about.current.close(); }}>
       <div className="dialog-heading"><span className="eyebrow">ABOUT INSIDE.</span><button aria-label="Close about" onClick={() => about.current?.close()}><X size={20} /></button></div>
       <h2>Understanding starts<br />with looking closer.</h2><p>An interactive study of the engineering inside a 14-inch MacBook Pro from 2026. Explore 20 simplified assemblies across five systems.</p>
       <p>The geometry is an original educational illustration. Component placement, dimensions, and separation are simplified; this is not a repair guide or a mechanically accurate teardown sequence.</p>
-      <div className="about-sources"><a href="https://support.apple.com/en-us/125815" target="_blank" rel="noreferrer">2026 service reference · Apple<ArrowUpRight size={15} /></a><a href="https://github.com/ashemag/human-atlas" target="_blank" rel="noreferrer">Interaction inspiration · Human Atlas<ArrowUpRight size={15} /></a></div>
+      <div className="about-sources"><a href="https://x.com/PsudoKit" target="_blank" rel="noopener noreferrer">More projects from @PsudoKit on X<ArrowUpRight size={15} aria-hidden="true" /></a><a href="https://support.apple.com/en-us/125815" target="_blank" rel="noreferrer">2026 service reference · Apple<ArrowUpRight size={15} /></a><a href="https://github.com/ashemag/human-atlas" target="_blank" rel="noreferrer">Interaction inspiration · Human Atlas<ArrowUpRight size={15} /></a></div>
       <p className="about-small">Independent project. MacBook Pro, M5 Pro, and MagSafe are Apple trademarks. This project is not affiliated with Apple.</p>
       <button className="isolate-button" onClick={() => about.current?.close()}>Back to exploring<ArrowRight size={16} /></button>
     </dialog>
