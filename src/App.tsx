@@ -108,7 +108,7 @@ export default function App() {
     <header className="header">
       <a className="brand" href="/" aria-label="Inside a MacBook home"><span className="brand-icon"><Layers3 size={21} strokeWidth={1.65} /></span><span>inside<span className="brand-period">.</span></span></a>
       <div className="breadcrumb"><span>AN OBJECT EXPLORER</span><i /><span>MACBOOK PRO</span></div>
-      <div className="header-actions"><button className="about-button" aria-label="About this project" onClick={() => about.current?.showModal()}><CircleHelp size={16} /><span>About this project</span></button>
+      <div className="header-actions"><a className="creator-link header-creator" href="https://x.com/PsudoKit" target="_blank" rel="noopener noreferrer" aria-label="Follow @PsudoKit on X"><span className="creator-invite">Follow the builds</span><span>@PsudoKit <ArrowUpRight size={13} aria-hidden="true" /></span></a><button className="about-button" aria-label="About this project" onClick={() => about.current?.showModal()}><CircleHelp size={16} /><span>About this project</span></button>
         <button key={demo ? "exit-demo" : "start-demo"} className={`demo-button ${demo ? 'playing' : ''}`} onClick={demo ? () => setDemo(false) : startDemo}>{demo ? <Pause size={13} fill="currentColor" /> : <Play size={13} fill="currentColor" />}{demo ? 'Exit demo' : 'Watch the teardown'}<span className="demo-duration">24s</span></button>
       </div>
     </header>
